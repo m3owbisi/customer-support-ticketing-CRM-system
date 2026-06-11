@@ -42,6 +42,11 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Root welcome endpoint
+app.get('/', (req, res) => {
+  res.json({ message: 'Support CRM API Server is running. Access data at /api/tickets' });
+});
+
 // Routes
 const ticketRouter = require('./routes/tickets');
 app.use('/api/tickets', ticketRouter);
