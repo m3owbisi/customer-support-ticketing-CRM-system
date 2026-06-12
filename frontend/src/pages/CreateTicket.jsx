@@ -17,6 +17,18 @@ export default function CreateTicket() {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const validate = () => {
     const tempErrors = {};
@@ -62,6 +74,13 @@ export default function CreateTicket() {
     e.preventDefault();
     if (!validate()) {
       toast.error('Please fix the errors in the form');
+      setTimeout(() => {
+        const firstErrorField = document.querySelector('.border-red-350, .border-red-500, .border-red-300, .border-red-800');
+        if (firstErrorField) {
+          firstErrorField.focus();
+          firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 50);
       return;
     }
 
@@ -84,7 +103,7 @@ export default function CreateTicket() {
       navigate('/');
     } catch (err) {
       console.error(err);
-      toast.error(err.message || 'Failed to create ticket');
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -277,11 +296,12 @@ export default function CreateTicket() {
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !isOnline}
+              title={!isOnline ? "Waiting for connection…" : ""}
               className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
             >
               <Send className="h-4 w-4" />
-              <span>{loading ? 'Creating...' : 'Create Ticket'}</span>
+              <span>{!isOnline ? 'Waiting for connection…' : loading ? 'Creating...' : 'Create Ticket'}</span>
             </button>
           </div>
         </form>

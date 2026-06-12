@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import TicketList from './pages/TicketList';
@@ -14,9 +14,9 @@ function NotFound() {
         <LifeBuoy className="h-7 w-7 text-indigo-600 animate-spin-slow" />
       </div>
       <h1 className="font-display text-4xl font-black text-slate-900 dark:text-white">404</h1>
-      <p className="mt-2 text-base font-semibold text-slate-500 dark:text-slate-400">Ticket not found</p>
+      <p className="mt-2 text-base font-semibold text-slate-500 dark:text-slate-400">Page not found</p>
       <p className="mt-1 text-sm text-slate-400 dark:text-slate-500 max-w-xs">
-        Ticket not found. It may have been deleted or the link is incorrect.
+        The page you're looking for doesn't exist.
       </p>
       <a
         href="/"
@@ -30,6 +30,8 @@ function NotFound() {
 
 export default function App() {
   const navigate = useNavigate();
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showOnlineStatus, setShowOnlineStatus] = useState(false);
 
   // Dark Mode Initialization
   useEffect(() => {
@@ -58,10 +60,46 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate]);
 
+  // Online / Offline listeners
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      setShowOnlineStatus(true);
+      const timer = setTimeout(() => {
+        setShowOnlineStatus(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setShowOnlineStatus(false);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col transition-colors duration-300">
       <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
       <Navbar />
+      
+      {/* Offline/Online Banner */}
+      {!isOnline && (
+        <div className="bg-amber-500 text-white text-center py-2 text-sm font-semibold transition-all duration-200 sticky top-0 z-50 shadow-md">
+          You're offline. Changes won't be saved until your connection is restored.
+        </div>
+      )}
+      {isOnline && showOnlineStatus && (
+        <div className="bg-emerald-500 text-white text-center py-2 text-sm font-semibold transition-all duration-200 sticky top-0 z-50 shadow-md">
+          Back online
+        </div>
+      )}
+
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<TicketList />} />
