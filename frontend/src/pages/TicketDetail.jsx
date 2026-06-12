@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getTicketDetails, updateTicket } from '../api';
 import StatusBadge from '../components/StatusBadge';
 import PriorityBadge from '../components/PriorityBadge';
-import { ArrowLeft, User, Calendar, Mail, FileText, Send, MessageSquare, Clipboard, Edit2, Check, X } from 'lucide-react';
+import { ArrowLeft, User, Calendar, Mail, FileText, Send, MessageSquare, Clipboard, Edit2, Check, X, Tag } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function TicketDetail() {
@@ -22,6 +22,9 @@ export default function TicketDetail() {
   const [isEditingPriority, setIsEditingPriority] = useState(false);
   const [editedPriority, setEditedPriority] = useState('Medium');
 
+  const [isEditingTags, setIsEditingTags] = useState(false);
+  const [editedTags, setEditedTags] = useState('');
+
   useEffect(() => {
     loadTicket();
   }, [ticket_id]);
@@ -33,6 +36,7 @@ export default function TicketDetail() {
       setTicket(data);
       setEditedAssignee(data.assignee || '');
       setEditedPriority(data.priority || 'Medium');
+      setEditedTags(data.tags || '');
     } catch (err) {
       console.error(err);
       toast.error('Failed to load ticket details');
@@ -105,10 +109,26 @@ export default function TicketDetail() {
     }
   };
 
+  // Tags save handler
+  const handleSaveTags = async () => {
+    try {
+      await updateTicket(ticket_id, { tags: editedTags });
+      setTicket(prev => ({ ...prev, tags: editedTags || null }));
+      setIsEditingTags(false);
+      toast.success('Tags updated successfully');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update tags');
+    }
+  };
+
   // Note submission handler
   const handleAddNote = async (e) => {
     e.preventDefault();
-    if (!newNote.trim()) return;
+    if (!newNote.trim()) {
+      toast.error('Note cannot be empty');
+      return;
+    }
 
     setSubmittingNote(true);
     try {
@@ -142,32 +162,32 @@ export default function TicketDetail() {
       {/* Back Link */}
       <button
         onClick={() => navigate(-1)}
-        className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         <span>Back to List</span>
       </button>
 
       {/* Header Info */}
-      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-slate-200 pb-6">
+      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-slate-200 dark:border-slate-800 pb-6">
         <div>
           <div className="flex items-center gap-3">
-            <span className="font-display text-2xl font-black text-slate-900">{ticket.ticket_id}</span>
+            <span className="font-display text-2xl font-black text-slate-900 dark:text-white">{ticket.ticket_id}</span>
             <StatusBadge status={ticket.status} />
             <PriorityBadge priority={ticket.priority} />
           </div>
-          <h1 className="mt-2 font-display text-3xl font-extrabold text-slate-900 leading-tight">
+          <h1 className="mt-2 font-display text-3xl font-extrabold text-slate-900 dark:text-white leading-tight">
             {ticket.subject}
           </h1>
         </div>
 
         {/* Status Dropdown Update */}
-        <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Update Status:</span>
+        <div className="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-sm transition-colors duration-300">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Update Status:</span>
           <select
             value={ticket.status}
             onChange={handleStatusChange}
-            className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-semibold text-slate-700 outline-none focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500"
+            className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 text-sm font-semibold text-slate-755 dark:text-slate-350 outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500"
           >
             <option value="Open">Open</option>
             <option value="In Progress">In Progress</option>
@@ -182,9 +202,9 @@ export default function TicketDetail() {
         {/* Left Side: Ticket Metadata & Description */}
         <div className="space-y-6 lg:col-span-2">
           {/* Customer / Ticket Details Card */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="font-display text-lg font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-4 mb-4">
-              <Clipboard className="h-5 w-5 text-indigo-600" />
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition-colors duration-300">
+            <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
+              <Clipboard className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
               <span>Ticket details</span>
             </h3>
 
@@ -192,16 +212,16 @@ export default function TicketDetail() {
               <div className="flex items-start gap-3">
                 <User className="h-5 w-5 text-slate-400 mt-0.5" />
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Customer Name</p>
-                  <p className="text-sm font-semibold text-slate-800">{ticket.customer_name}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Customer Name</p>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{ticket.customer_name}</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
                 <Mail className="h-5 w-5 text-slate-400 mt-0.5" />
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Customer Email</p>
-                  <a href={`mailto:${ticket.customer_email}`} className="text-sm font-semibold text-indigo-600 hover:underline">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Customer Email</p>
+                  <a href={`mailto:${ticket.customer_email}`} className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
                     {ticket.customer_email}
                   </a>
                 </div>
@@ -210,8 +230,8 @@ export default function TicketDetail() {
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 text-slate-400 mt-0.5" />
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Created Date</p>
-                  <p className="text-sm font-semibold text-slate-800">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Created Date</p>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                     {new Date(ticket.created_at).toLocaleString()}
                   </p>
                 </div>
@@ -220,8 +240,8 @@ export default function TicketDetail() {
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 text-slate-400 mt-0.5" />
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Last Updated</p>
-                  <p className="text-sm font-semibold text-slate-800">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Last Updated</p>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                     {new Date(ticket.updated_at).toLocaleString()}
                   </p>
                 </div>
@@ -231,7 +251,7 @@ export default function TicketDetail() {
               <div className="flex items-start gap-3">
                 <User className="h-5 w-5 text-slate-400 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Assignee</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Assignee</p>
                   {isEditingAssignee ? (
                     <div className="mt-1 flex items-center gap-1.5">
                       <input
@@ -239,23 +259,23 @@ export default function TicketDetail() {
                         value={editedAssignee}
                         onChange={(e) => setEditedAssignee(e.target.value)}
                         placeholder="Agent Name"
-                        className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-sm outline-none focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500"
+                        className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2 py-1 text-sm text-slate-800 dark:text-slate-100 outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500"
                       />
-                      <button onClick={handleSaveAssignee} className="rounded-md bg-emerald-50 p-1.5 text-emerald-600 hover:bg-emerald-100">
+                      <button onClick={handleSaveAssignee} className="rounded-md bg-emerald-50 dark:bg-emerald-950/40 p-1.5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100">
                         <Check className="h-4 w-4" />
                       </button>
-                      <button onClick={() => { setEditedAssignee(ticket.assignee || ''); setIsEditingAssignee(false); }} className="rounded-md bg-rose-50 p-1.5 text-rose-600 hover:bg-rose-100">
+                      <button onClick={() => { setEditedAssignee(ticket.assignee || ''); setIsEditingAssignee(false); }} className="rounded-md bg-rose-50 dark:bg-rose-950/40 p-1.5 text-rose-600 dark:text-rose-450 hover:bg-rose-100">
                         <X className="h-4 w-4" />
                       </button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-slate-800">
-                        {ticket.assignee || <span className="italic text-slate-400">Unassigned</span>}
+                      <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                        {ticket.assignee || <span className="italic text-slate-400 dark:text-slate-650">Unassigned</span>}
                       </span>
                       <button
                         onClick={() => setIsEditingAssignee(true)}
-                        className="text-slate-400 hover:text-indigo-600 transition-colors"
+                        className="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                       >
                         <Edit2 className="h-3.5 w-3.5" />
                       </button>
@@ -267,34 +287,79 @@ export default function TicketDetail() {
               {/* Priority Field (Inline edit) */}
               <div className="flex items-start gap-3">
                 <Clipboard className="h-5 w-5 text-slate-400 mt-0.5" />
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Priority</p>
+                <div className="flex-1">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Priority</p>
                   {isEditingPriority ? (
                     <div className="mt-1 flex items-center gap-1.5">
                       <select
                         value={editedPriority}
                         onChange={(e) => setEditedPriority(e.target.value)}
-                        className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-sm outline-none focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500"
+                        className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2 py-1 text-sm text-slate-800 dark:text-slate-100 outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500"
                       >
                         <option value="Low">Low</option>
                         <option value="Medium">Medium</option>
                         <option value="High">High</option>
                       </select>
-                      <button onClick={handleSavePriority} className="rounded-md bg-emerald-50 p-1.5 text-emerald-600 hover:bg-emerald-100">
+                      <button onClick={handleSavePriority} className="rounded-md bg-emerald-50 dark:bg-emerald-950/40 p-1.5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100">
                         <Check className="h-4 w-4" />
                       </button>
-                      <button onClick={() => { setEditedPriority(ticket.priority); setIsEditingPriority(false); }} className="rounded-md bg-rose-50 p-1.5 text-rose-600 hover:bg-rose-100">
+                      <button onClick={() => { setEditedPriority(ticket.priority); setIsEditingPriority(false); }} className="rounded-md bg-rose-50 dark:bg-rose-950/40 p-1.5 text-rose-600 dark:text-rose-450 hover:bg-rose-100">
                         <X className="h-4 w-4" />
                       </button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-slate-800">
+                      <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                         {ticket.priority}
                       </span>
                       <button
                         onClick={() => setIsEditingPriority(true)}
-                        className="text-slate-400 hover:text-indigo-600 transition-colors"
+                        className="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Tags Field (Inline edit) */}
+              <div className="flex items-start gap-3 sm:col-span-2">
+                <Tag className="h-5 w-5 text-slate-400 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Tags</p>
+                  {isEditingTags ? (
+                    <div className="mt-1 flex items-center gap-1.5 max-w-md">
+                      <input
+                        type="text"
+                        value={editedTags}
+                        onChange={(e) => setEditedTags(e.target.value)}
+                        placeholder="e.g. billing, bug (comma separated)"
+                        className="flex-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2 py-1 text-sm text-slate-800 dark:text-slate-100 outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500"
+                      />
+                      <button onClick={handleSaveTags} className="rounded-md bg-emerald-50 dark:bg-emerald-950/40 p-1.5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100">
+                        <Check className="h-4 w-4" />
+                      </button>
+                      <button onClick={() => { setEditedTags(ticket.tags || ''); setIsEditingTags(false); }} className="rounded-md bg-rose-50 dark:bg-rose-950/40 p-1.5 text-rose-600 dark:text-rose-455 hover:bg-rose-100">
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap gap-1">
+                        {ticket.tags ? (
+                          ticket.tags.split(',').map((tag) => (
+                            <span key={tag} className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                              {tag.trim()}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="italic text-slate-450 dark:text-slate-600">No tags yet</span>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setIsEditingTags(true)}
+                        className="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                       >
                         <Edit2 className="h-3.5 w-3.5" />
                       </button>
@@ -307,12 +372,12 @@ export default function TicketDetail() {
           </div>
 
           {/* Description Card */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="font-display text-lg font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-4 mb-4">
-              <FileText className="h-5 w-5 text-indigo-600" />
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition-colors duration-300">
+            <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
+              <FileText className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
               <span>Description</span>
             </h3>
-            <p className="text-sm font-medium text-slate-600 whitespace-pre-wrap leading-relaxed">
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
               {ticket.description}
             </p>
           </div>
@@ -320,27 +385,27 @@ export default function TicketDetail() {
 
         {/* Right Side: Timeline & Notes */}
         <div className="space-y-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col h-[500px]">
-            <h3 className="font-display text-lg font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-4 mb-4 shrink-0">
-              <MessageSquare className="h-5 w-5 text-indigo-600" />
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm flex flex-col h-[520px] transition-colors duration-300">
+            <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-4 mb-4 shrink-0">
+              <MessageSquare className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
               <span>Internal Notes</span>
             </h3>
 
             {/* Scrollable list of notes */}
             <div className="flex-1 overflow-y-auto space-y-4 pr-1 mb-4">
               {ticket.notes.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-slate-400 text-center gap-1.5">
-                  <MessageSquare className="h-8 w-8 text-slate-300" />
+                <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-600 text-center gap-1.5">
+                  <MessageSquare className="h-8 w-8 text-slate-350 dark:text-slate-700" />
                   <span className="font-semibold text-sm">No notes yet</span>
                   <span className="text-xs">Add a note below to log updates</span>
                 </div>
               ) : (
                 ticket.notes.map((note, idx) => (
-                  <div key={idx} className="rounded-lg bg-slate-50 p-3.5 border border-slate-100">
-                    <p className="text-sm text-slate-700 font-medium whitespace-pre-wrap leading-normal">
+                  <div key={idx} className="rounded-lg bg-slate-50 dark:bg-slate-950/40 p-3.5 border border-slate-100 dark:border-slate-850">
+                    <p className="text-sm text-slate-700 dark:text-slate-300 font-medium whitespace-pre-wrap leading-normal">
                       {note.note_text}
                     </p>
-                    <div className="mt-2 text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
+                    <div className="mt-2 text-right text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
                       {new Date(note.created_at).toLocaleString()}
                     </div>
                   </div>
@@ -349,14 +414,14 @@ export default function TicketDetail() {
             </div>
 
             {/* Note Input Form */}
-            <form onSubmit={handleAddNote} className="shrink-0 border-t border-slate-100 pt-4">
+            <form onSubmit={handleAddNote} className="shrink-0 border-t border-slate-100 dark:border-slate-800 pt-4">
               <div className="relative">
                 <textarea
                   rows="2"
                   placeholder="Type a new note..."
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
-                  className="block w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-3 pr-12 text-sm placeholder-slate-400 outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500"
+                  className="block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 py-2.5 pl-3 pr-12 text-sm placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500"
                 ></textarea>
                 <button
                   type="submit"

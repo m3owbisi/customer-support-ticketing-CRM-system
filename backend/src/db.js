@@ -34,6 +34,7 @@ db.exec(`
     status TEXT NOT NULL DEFAULT 'Open' CHECK(status IN ('Open', 'In Progress', 'Closed')),
     priority TEXT NOT NULL DEFAULT 'Medium' CHECK(priority IN ('Low', 'Medium', 'High')),
     assignee TEXT DEFAULT NULL,
+    tags TEXT DEFAULT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
@@ -46,6 +47,13 @@ db.exec(`
     FOREIGN KEY(ticket_id) REFERENCES tickets(ticket_id) ON DELETE CASCADE
   );
 `);
+
+// Alter existing table to add tags column if it doesn't exist
+try {
+  db.exec('ALTER TABLE tickets ADD COLUMN tags TEXT DEFAULT NULL');
+} catch (error) {
+  // Column already exists
+}
 
 // Insert seed data if tables are empty
 const rowCount = db.prepare('SELECT COUNT(*) as count FROM tickets').get();

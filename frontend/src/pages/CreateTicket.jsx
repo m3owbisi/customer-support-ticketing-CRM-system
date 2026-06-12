@@ -12,7 +12,8 @@ export default function CreateTicket() {
     subject: '',
     description: '',
     priority: 'Medium',
-    assignee: ''
+    assignee: '',
+    tags: ''
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -88,24 +89,24 @@ export default function CreateTicket() {
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
-        className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         <span>Back</span>
       </button>
 
       {/* Main Card */}
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm sm:p-8 transition-colors duration-300">
         {/* Header */}
-        <div className="mb-8 flex items-center gap-3 border-b border-slate-100 pb-6">
-          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+        <div className="mb-8 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-6">
+          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
             <LifeBuoy className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900">
+            <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
               Create New Support Ticket
             </h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Log a new issue for a customer to begin tracking it.
             </p>
           </div>
@@ -116,7 +117,7 @@ export default function CreateTicket() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             {/* Customer Name */}
             <div>
-              <label htmlFor="customer_name" className="block text-sm font-semibold text-slate-700">
+              <label htmlFor="customer_name" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Customer Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -126,10 +127,10 @@ export default function CreateTicket() {
                 value={formData.customer_name}
                 onChange={handleChange}
                 placeholder="Jane Doe"
-                className={`mt-1.5 block w-full rounded-lg border bg-slate-50 px-3.5 py-2 text-sm placeholder-slate-400 outline-none transition-all focus:bg-white focus:ring-1 ${
+                className={`mt-1.5 block w-full rounded-lg border bg-slate-50 dark:bg-slate-950 px-3.5 py-2 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none transition-all focus:bg-white dark:focus:bg-slate-900 focus:ring-1 ${
                   errors.customer_name
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                    : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500'
+                    ? 'border-red-300 dark:border-red-800 focus:border-red-500 focus:ring-red-500'
+                    : 'border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-indigo-500'
                 }`}
               />
               {errors.customer_name && (
@@ -139,7 +140,7 @@ export default function CreateTicket() {
 
             {/* Customer Email */}
             <div>
-              <label htmlFor="customer_email" className="block text-sm font-semibold text-slate-700">
+              <label htmlFor="customer_email" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Customer Email <span className="text-red-500">*</span>
               </label>
               <input
@@ -149,10 +150,10 @@ export default function CreateTicket() {
                 value={formData.customer_email}
                 onChange={handleChange}
                 placeholder="jane.doe@example.com"
-                className={`mt-1.5 block w-full rounded-lg border bg-slate-50 px-3.5 py-2 text-sm placeholder-slate-400 outline-none transition-all focus:bg-white focus:ring-1 ${
+                className={`mt-1.5 block w-full rounded-lg border bg-slate-50 dark:bg-slate-950 px-3.5 py-2 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none transition-all focus:bg-white dark:focus:bg-slate-900 focus:ring-1 ${
                   errors.customer_email
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                    : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500'
+                    ? 'border-red-300 dark:border-red-800 focus:border-red-500 focus:ring-red-500'
+                    : 'border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-indigo-500'
                 }`}
               />
               {errors.customer_email && (
@@ -164,7 +165,7 @@ export default function CreateTicket() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             {/* Priority Select */}
             <div>
-              <label htmlFor="priority" className="block text-sm font-semibold text-slate-700">
+              <label htmlFor="priority" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Priority
               </label>
               <select
@@ -172,7 +173,7 @@ export default function CreateTicket() {
                 name="priority"
                 value={formData.priority}
                 onChange={handleChange}
-                className="mt-1.5 block w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500"
+                className="mt-1.5 block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-955 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500"
               >
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
@@ -182,7 +183,7 @@ export default function CreateTicket() {
 
             {/* Assignee Field (free text option) */}
             <div>
-              <label htmlFor="assignee" className="block text-sm font-semibold text-slate-700">
+              <label htmlFor="assignee" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Assignee Name
               </label>
               <input
@@ -192,14 +193,30 @@ export default function CreateTicket() {
                 value={formData.assignee}
                 onChange={handleChange}
                 placeholder="Agent name (optional)"
-                className="mt-1.5 block w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm placeholder-slate-400 outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500"
+                className="mt-1.5 block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3.5 py-2 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500"
               />
             </div>
           </div>
 
+          {/* Tags */}
+          <div>
+            <label htmlFor="tags" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+              Tags
+            </label>
+            <input
+              type="text"
+              id="tags"
+              name="tags"
+              value={formData.tags}
+              onChange={handleChange}
+              placeholder="e.g. billing, bug, feature-request (comma separated)"
+              className="mt-1.5 block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3.5 py-2 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+
           {/* Subject */}
           <div>
-            <label htmlFor="subject" className="block text-sm font-semibold text-slate-700">
+            <label htmlFor="subject" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
               Subject <span className="text-red-500">*</span>
             </label>
             <input
@@ -209,10 +226,10 @@ export default function CreateTicket() {
               value={formData.subject}
               onChange={handleChange}
               placeholder="e.g. Dashboard crashes on export"
-              className={`mt-1.5 block w-full rounded-lg border bg-slate-50 px-3.5 py-2 text-sm placeholder-slate-400 outline-none transition-all focus:bg-white focus:ring-1 ${
+              className={`mt-1.5 block w-full rounded-lg border bg-slate-50 dark:bg-slate-950 px-3.5 py-2 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none transition-all focus:bg-white dark:focus:bg-slate-900 focus:ring-1 ${
                 errors.subject
-                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                  : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500'
+                  ? 'border-red-300 dark:border-red-800 focus:border-red-500 focus:ring-red-500'
+                  : 'border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-indigo-500'
               }`}
             />
             {errors.subject && (
@@ -222,7 +239,7 @@ export default function CreateTicket() {
 
           {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-semibold text-slate-700">
+            <label htmlFor="description" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
               Description <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -232,10 +249,10 @@ export default function CreateTicket() {
               value={formData.description}
               onChange={handleChange}
               placeholder="Provide a detailed description of the customer's issue..."
-              className={`mt-1.5 block w-full rounded-lg border bg-slate-50 px-3.5 py-2 text-sm placeholder-slate-400 outline-none transition-all focus:bg-white focus:ring-1 ${
+              className={`mt-1.5 block w-full rounded-lg border bg-slate-50 dark:bg-slate-950 px-3.5 py-2 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none transition-all focus:bg-white dark:focus:bg-slate-900 focus:ring-1 ${
                 errors.description
-                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                  : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500'
+                  ? 'border-red-300 dark:border-red-800 focus:border-red-500 focus:ring-red-500'
+                  : 'border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-indigo-500'
               }`}
             ></textarea>
             {errors.description && (
@@ -244,11 +261,11 @@ export default function CreateTicket() {
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 border-t border-slate-100 pt-6">
+          <div className="flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800 pt-6">
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98] transition-all"
+              className="inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-750 hover:text-slate-900 dark:hover:text-white active:scale-[0.98] transition-all"
             >
               Cancel
             </button>

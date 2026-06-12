@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 export default function TicketList() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const searchInputRef = useRef(null);
 
   // Retrieve initial states from search parameters to preserve filter/search state
   const initialStatus = searchParams.get('status') || 'All';
@@ -51,6 +52,24 @@ export default function TicketList() {
     }, 300);
     return () => clearTimeout(handler);
   }, [searchVal]);
+
+  // Keyboard shortcut: '/' to focus search bar
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') {
+        return;
+      }
+      if (e.key === '/') {
+        e.preventDefault();
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Fetch Tickets from API
   useEffect(() => {
@@ -100,7 +119,7 @@ export default function TicketList() {
     }
     
     // Headers
-    const headers = ['Ticket ID', 'Customer Name', 'Customer Email', 'Subject', 'Priority', 'Status', 'Assignee', 'Created At'];
+    const headers = ['Ticket ID', 'Customer Name', 'Customer Email', 'Subject', 'Priority', 'Status', 'Assignee', 'Tags', 'Created At'];
     
     // Rows
     const rows = tickets.map(t => [
@@ -111,6 +130,7 @@ export default function TicketList() {
       t.priority,
       t.status,
       t.assignee ? `"${t.assignee.replace(/"/g, '""')}"` : 'Unassigned',
+      t.tags ? `"${t.tags.replace(/"/g, '""')}"` : '',
       t.created_at
     ]);
 
@@ -126,6 +146,35 @@ export default function TicketList() {
     toast.success('Tickets exported as CSV');
   };
 
+  const getEmptyStateText = () => {
+    if (summary.total === 0) {
+      return {
+        title: 'No tickets yet',
+        desc: 'Create your first support ticket to get started.'
+      };
+    }
+    if (debouncedSearch) {
+      return {
+        title: 'No tickets match your search',
+        desc: 'Try checking your spelling or clearing search terms.'
+      };
+    }
+    if (statusFilter !== 'All' || priorityFilter !== 'All') {
+      const parts = [];
+      if (priorityFilter !== 'All') parts.push(priorityFilter);
+      if (statusFilter !== 'All') parts.push(statusFilter);
+      return {
+        title: `No ${parts.join(' ')} tickets found`,
+        desc: 'Try adjusting your status or priority filters.'
+      };
+    }
+    return {
+      title: 'No tickets found',
+      desc: 'Try adjusting your filters or search query.'
+    };
+  };
+  const emptyState = getEmptyStateText();
+
   const totalPages = Math.ceil(total / 8) || 1;
 
   return (
@@ -133,18 +182,18 @@ export default function TicketList() {
       {/* Top Banner / Greeting */}
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-extrabold tracking-tight text-slate-900">
+          <h1 className="font-display text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             Agent Dashboard
           </h1>
-          <p className="mt-1.5 text-sm text-slate-500">
+          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
             Monitor, prioritize, and resolve customer issues in real-time.
           </p>
         </div>
         <button
           onClick={handleExportCSV}
-          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98] transition-all"
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white active:scale-[0.98] transition-all"
         >
-          <Download className="h-4 w-4 text-slate-500" />
+          <Download className="h-4 w-4 text-slate-500 dark:text-slate-400" />
           <span>Export CSV</span>
         </button>
       </div>
@@ -152,83 +201,84 @@ export default function TicketList() {
       {/* Ticket Count Summary Bar */}
       <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {/* Total Card */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-905 p-5 shadow-sm hover:shadow-md dark:bg-slate-900/60 dark:hover:border-slate-700 transition-all duration-300">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
               <ClipboardList className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Tickets</p>
-              <h4 className="text-2xl font-bold text-slate-900">{summary.total}</h4>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total Tickets</p>
+              <h4 className="text-2xl font-bold text-slate-900 dark:text-white">{summary.total}</h4>
             </div>
           </div>
         </div>
 
         {/* Open Card */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-905 p-5 shadow-sm hover:shadow-md dark:bg-slate-900/60 dark:hover:border-slate-700 transition-all duration-300">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-450">
               <AlertCircle className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Open</p>
-              <h4 className="text-2xl font-bold text-slate-950">{summary.open}</h4>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Open</p>
+              <h4 className="text-2xl font-bold text-slate-900 dark:text-white">{summary.open}</h4>
             </div>
           </div>
         </div>
 
         {/* In Progress Card */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-905 p-5 shadow-sm hover:shadow-md dark:bg-slate-900/60 dark:hover:border-slate-700 transition-all duration-300">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-450">
               <Clock className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">In Progress</p>
-              <h4 className="text-2xl font-bold text-slate-900">{summary.in_progress}</h4>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">In Progress</p>
+              <h4 className="text-2xl font-bold text-slate-900 dark:text-white">{summary.in_progress}</h4>
             </div>
           </div>
         </div>
 
         {/* Closed Card */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-905 p-5 shadow-sm hover:shadow-md dark:bg-slate-900/60 dark:hover:border-slate-700 transition-all duration-300">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-450">
               <CheckCircle className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Closed</p>
-              <h4 className="text-2xl font-bold text-slate-900">{summary.closed}</h4>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Closed</p>
+              <h4 className="text-2xl font-bold text-slate-900 dark:text-white">{summary.closed}</h4>
             </div>
           </div>
         </div>
       </div>
 
       {/* Search and Filters panel */}
-      <div className="mb-6 flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+      <div className="mb-6 flex flex-col gap-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm md:flex-row md:items-center md:justify-between transition-colors duration-300">
         {/* Search */}
         <div className="relative flex-1 max-w-md">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <Search className="h-5 w-5 text-slate-400" />
           </div>
           <input
+            ref={searchInputRef}
             type="text"
-            placeholder="Search by ID, name, email, subject..."
+            placeholder="Search by ID, name, email, subject, tag... (Press '/' to focus)"
             value={searchVal}
             onChange={(e) => setSearchVal(e.target.value)}
-            className="block w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-3 text-sm placeholder-slate-400 transition-all focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500 outline-none"
+            className="block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 py-2.5 pl-10 pr-3 text-sm placeholder-slate-400 dark:placeholder-slate-500 text-slate-800 dark:text-slate-100 transition-all focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500 outline-none"
           />
         </div>
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-slate-500">
+          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
             <SlidersHorizontal className="h-4 w-4" />
             <span>Priority:</span>
             <select
               value={priorityFilter}
               onChange={handlePriorityChange}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
             >
               <option value="All">All Priorities</option>
               <option value="High">High</option>
@@ -240,7 +290,7 @@ export default function TicketList() {
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 border-b border-slate-200">
+      <div className="mb-6 border-b border-slate-200 dark:border-slate-800">
         <nav className="flex gap-6" aria-label="Tabs">
           {['All', 'Open', 'In Progress', 'Closed'].map((tab) => {
             const isActive = statusFilter === tab;
@@ -251,7 +301,7 @@ export default function TicketList() {
                 className={`border-b-2 py-4 px-1 text-sm font-semibold transition-all ${
                   isActive
                     ? 'border-indigo-600 text-indigo-600'
-                    : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'
+                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:border-slate-350 dark:hover:border-slate-700 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
                 {tab}
@@ -262,14 +312,14 @@ export default function TicketList() {
       </div>
 
       {/* Ticket Table */}
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-colors duration-300">
         <div className="min-w-full overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 text-left">
-            <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-850 text-left">
+            <thead className="bg-slate-50 dark:bg-slate-950/40 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
               <tr>
                 <th className="px-6 py-4">Ticket ID</th>
                 <th className="px-6 py-4">Customer</th>
-                <th className="px-6 py-4">Subject</th>
+                <th className="px-6 py-4">Subject & Tags</th>
                 <th className="px-6 py-4 text-center">Priority</th>
                 <th className="px-6 py-4 text-center">Status</th>
                 <th className="px-6 py-4">Assignee</th>
@@ -277,7 +327,7 @@ export default function TicketList() {
                 <th className="relative px-6 py-4"><span className="sr-only">View</span></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 bg-white">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
               {loading ? (
                 <tr>
                   <td colSpan="8" className="px-6 py-10 text-center">
@@ -289,11 +339,11 @@ export default function TicketList() {
                 </tr>
               ) : tickets.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan="8" className="px-6 py-12 text-center text-slate-400 dark:text-slate-500">
                     <div className="flex flex-col items-center justify-center gap-1">
-                      <ClipboardList className="h-10 w-10 text-slate-300" />
-                      <span className="font-semibold text-slate-500">No tickets found</span>
-                      <span className="text-xs">Try adjusting your filters or search query</span>
+                      <ClipboardList className="h-10 w-10 text-slate-300 dark:text-slate-700" />
+                      <span className="font-semibold text-slate-500 dark:text-slate-400">{emptyState.title}</span>
+                      <span className="text-xs">{emptyState.desc}</span>
                     </div>
                   </td>
                 </tr>
@@ -302,17 +352,26 @@ export default function TicketList() {
                   <tr
                     key={ticket.ticket_id}
                     onClick={() => navigate(`/tickets/${ticket.ticket_id}`)}
-                    className="group hover:bg-slate-50/80 cursor-pointer transition-colors"
+                    className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/40 cursor-pointer transition-colors"
                   >
-                    <td className="whitespace-nowrap px-6 py-4 text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                    <td className="whitespace-nowrap px-6 py-4 text-sm font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">
                       {ticket.ticket_id}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
-                      <div className="text-sm font-semibold text-slate-800">{ticket.customer_name}</div>
-                      <div className="text-xs text-slate-400">{ticket.customer_email}</div>
+                      <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{ticket.customer_name}</div>
+                      <div className="text-xs text-slate-400 dark:text-slate-500">{ticket.customer_email}</div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate font-medium">
-                      {ticket.subject}
+                    <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-300 max-w-xs font-medium">
+                      <div className="truncate">{ticket.subject}</div>
+                      {ticket.tags && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {ticket.tags.split(',').map((tag) => (
+                            <span key={tag} className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-400 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                              {tag.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-center">
                       <PriorityBadge priority={ticket.priority} />
@@ -320,12 +379,12 @@ export default function TicketList() {
                     <td className="whitespace-nowrap px-6 py-4 text-center">
                       <StatusBadge status={ticket.status} />
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-500 font-medium">
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-550 dark:text-slate-400 font-medium">
                       {ticket.assignee || (
-                        <span className="italic text-slate-400">Unassigned</span>
+                        <span className="italic text-slate-400 dark:text-slate-600">Unassigned</span>
                       )}
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-400 font-medium">
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-400 dark:text-slate-500 font-medium">
                       {new Date(ticket.created_at).toLocaleDateString(undefined, {
                         month: 'short',
                         day: 'numeric',
@@ -333,7 +392,7 @@ export default function TicketList() {
                       })}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold">
-                      <span className="flex items-center justify-end gap-1 text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="flex items-center justify-end gap-1 text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">
                         <span>Details</span>
                         <ArrowRight className="h-3.5 w-3.5" />
                       </span>
@@ -347,22 +406,22 @@ export default function TicketList() {
 
         {/* Pagination bar */}
         {!loading && tickets.length > 0 && (
-          <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-4">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 px-6 py-4">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Showing page {page} of {totalPages} ({total} total)
             </span>
             <div className="flex gap-2">
               <button
                 disabled={page <= 1}
                 onClick={() => setPage(p => Math.max(1, p - 1))}
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
               >
                 Previous
               </button>
               <button
                 disabled={page >= totalPages}
                 onClick={() => setPage(p => p + 1)}
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
               >
                 Next
               </button>

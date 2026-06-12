@@ -32,9 +32,9 @@ router.get('/', (req, res) => {
     // Search query
     if (search && search.trim() !== '') {
       const trimmedSearch = search.trim();
-      conditions.push('(customer_name LIKE ? OR customer_email LIKE ? OR ticket_id LIKE ? OR subject LIKE ? OR description LIKE ?)');
+      conditions.push('(customer_name LIKE ? OR customer_email LIKE ? OR ticket_id LIKE ? OR subject LIKE ? OR description LIKE ? OR tags LIKE ?)');
       const wildcard = `%${trimmedSearch}%`;
-      params.push(wildcard, wildcard, wildcard, wildcard, wildcard);
+      params.push(wildcard, wildcard, wildcard, wildcard, wildcard, wildcard);
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -50,7 +50,7 @@ router.get('/', (req, res) => {
 
     // Fetch matching tickets
     const ticketsStmt = db.prepare(`
-      SELECT id, ticket_id, customer_name, customer_email, subject, description, status, priority, assignee, created_at, updated_at
+      SELECT id, ticket_id, customer_name, customer_email, subject, description, status, priority, assignee, tags, created_at, updated_at
       FROM tickets
       ${whereClause}
       ORDER BY created_at DESC
@@ -94,7 +94,7 @@ router.get('/', (req, res) => {
  */
 router.post('/', (req, res) => {
   try {
-    const { customer_name, customer_email, subject, description, priority = 'Medium', assignee } = req.body;
+    const { customer_name, customer_email, subject, description, priority = 'Medium', assignee, tags } = req.body;
 
     // Client/Server Validation
     if (!customer_name || !customer_name.trim()) {
@@ -116,8 +116,8 @@ router.post('/', (req, res) => {
     const transaction = db.transaction(() => {
       const ticket_id = generateNextTicketId(db);
       const insertStmt = db.prepare(`
-        INSERT INTO tickets (ticket_id, customer_name, customer_email, subject, description, status, priority, assignee)
-        VALUES (?, ?, ?, ?, ?, 'Open', ?, ?)
+        INSERT INTO tickets (ticket_id, customer_name, customer_email, subject, description, status, priority, assignee, tags)
+        VALUES (?, ?, ?, ?, ?, 'Open', ?, ?, ?)
       `);
       insertStmt.run(
         ticket_id,
@@ -126,7 +126,8 @@ router.post('/', (req, res) => {
         subject.trim(),
         description.trim(),
         priority,
-        assignee && assignee.trim() ? assignee.trim() : null
+        assignee && assignee.trim() ? assignee.trim() : null,
+        tags && tags.trim() ? tags.trim().toLowerCase() : null
       );
       
       const details = db.prepare('SELECT created_at FROM tickets WHERE ticket_id = ?').get(ticket_id);
@@ -154,7 +155,7 @@ router.get('/:ticket_id', (req, res) => {
       return res.status(404).json({ error: 'Not Found', message: `Ticket ${ticket_id} not found` });
     }
 
-    const notes = db.prepare('SELECT note_text, created_at FROM notes WHERE ticket_id = ? ORDER BY created_at DESC').all(ticket_id);
+    const notes = db.prepare('SELECT note_text, created_at FROM notes WHERE ticket_id = ? ORDER BY created_at ASC').all(ticket_id);
 
     res.json({
       ...ticket,
@@ -173,7 +174,7 @@ router.get('/:ticket_id', (req, res) => {
 router.put('/:ticket_id', (req, res) => {
   try {
     const { ticket_id } = req.params;
-    const { status, priority, assignee, note_text } = req.body;
+    const { status, priority, assignee, note_text, tags } = req.body;
 
     const transaction = db.transaction(() => {
       const ticket = db.prepare('SELECT 1 FROM tickets WHERE ticket_id = ?').get(ticket_id);
@@ -208,6 +209,11 @@ router.put('/:ticket_id', (req, res) => {
       if (assignee !== undefined) {
         fields.push('assignee = ?');
         values.push(assignee && assignee.trim() !== '' ? assignee.trim() : null);
+      }
+
+      if (tags !== undefined) {
+        fields.push('tags = ?');
+        values.push(tags && tags.trim() !== '' ? tags.trim().toLowerCase() : null);
       }
 
       if (fields.length > 0) {
