@@ -14,15 +14,15 @@ function NotFound() {
         <LifeBuoy className="h-7 w-7 text-indigo-600 animate-spin-slow" />
       </div>
       <h1 className="font-display text-4xl font-black text-slate-900 dark:text-white">404</h1>
-      <p className="mt-2 text-base font-semibold text-slate-500 dark:text-slate-400">Page not found</p>
+      <p className="mt-2 text-base font-semibold text-slate-500 dark:text-slate-400">Ticket not found</p>
       <p className="mt-1 text-sm text-slate-400 dark:text-slate-500 max-w-xs">
-        The page you are looking for doesn't exist or has been moved.
+        Ticket not found. It may have been deleted or the link is incorrect.
       </p>
       <a
         href="/"
         className="mt-6 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-all"
       >
-        Go back home
+        Back to all tickets
       </a>
     </div>
   );

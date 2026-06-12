@@ -311,6 +311,13 @@ export default function TicketList() {
         </nav>
       </div>
 
+      {/* Result Count */}
+      <div className="mb-4 flex items-center justify-between px-1">
+        <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+          {!loading && `${total} ${total === 1 ? 'ticket' : 'tickets'} found`}
+        </span>
+      </div>
+
       {/* Ticket Table */}
       <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-colors duration-300">
         <div className="min-w-full overflow-x-auto">
@@ -340,10 +347,46 @@ export default function TicketList() {
               ) : tickets.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="px-6 py-12 text-center text-slate-400 dark:text-slate-500">
-                    <div className="flex flex-col items-center justify-center gap-1">
-                      <ClipboardList className="h-10 w-10 text-slate-300 dark:text-slate-700" />
-                      <span className="font-semibold text-slate-500 dark:text-slate-400">{emptyState.title}</span>
-                      <span className="text-xs">{emptyState.desc}</span>
+                    <div className="flex flex-col items-center justify-center gap-1.5 py-4">
+                      <ClipboardList className="h-10 w-10 text-slate-350 dark:text-slate-700" />
+                      {summary.total === 0 ? (
+                        <>
+                          <span className="font-semibold text-slate-500 dark:text-slate-400 text-sm">
+                            No tickets yet. Create your first ticket to get started.
+                          </span>
+                          <button
+                            onClick={() => navigate('/tickets/new')}
+                            className="mt-2.5 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-indigo-500 transition-all"
+                          >
+                            New Ticket
+                          </button>
+                        </>
+                      ) : debouncedSearch ? (
+                        <>
+                          <span className="font-semibold text-slate-500 dark:text-slate-400 text-sm">
+                            No tickets match '{debouncedSearch}'. Try a different search.
+                          </span>
+                          <button
+                            onClick={() => { setSearchVal(''); setDebouncedSearch(''); }}
+                            className="mt-2.5 inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                          >
+                            <span>Clear Search</span>
+                            <span className="text-sm font-semibold">&times;</span>
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-semibold text-slate-500 dark:text-slate-400 text-sm">
+                            No {statusFilter !== 'All' ? statusFilter : ''} tickets found.
+                          </span>
+                          <button
+                            onClick={() => { setStatusFilter('All'); setPriorityFilter('All'); }}
+                            className="mt-2.5 text-xs font-bold text-indigo-650 dark:text-indigo-400 hover:underline"
+                          >
+                            View all tickets
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

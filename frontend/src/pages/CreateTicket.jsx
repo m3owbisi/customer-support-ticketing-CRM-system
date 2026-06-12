@@ -22,6 +22,8 @@ export default function CreateTicket() {
     const tempErrors = {};
     if (!formData.customer_name.trim()) {
       tempErrors.customer_name = 'Customer name is required';
+    } else if (formData.customer_name.trim().length < 2) {
+      tempErrors.customer_name = 'Customer name must be at least 2 characters';
     }
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -32,11 +34,15 @@ export default function CreateTicket() {
     }
     
     if (!formData.subject.trim()) {
-      tempErrors.subject = 'Ticket subject is required';
+      tempErrors.subject = 'Subject is required';
+    } else if (formData.subject.trim().length < 5) {
+      tempErrors.subject = 'Subject must be at least 5 characters';
     }
     
     if (!formData.description.trim()) {
-      tempErrors.description = 'Issue description is required';
+      tempErrors.description = 'Description is required';
+    } else if (formData.description.trim().length < 10) {
+      tempErrors.description = 'Description must be at least 10 characters';
     }
 
     setErrors(tempErrors);
@@ -71,8 +77,8 @@ export default function CreateTicket() {
         });
       }
 
-      toast.success(`Ticket Created: ${result.ticket_id}`, {
-        duration: 5000,
+      toast.success(`Ticket ${result.ticket_id} created successfully`, {
+        duration: 4000,
         position: 'top-right'
       });
       navigate('/');

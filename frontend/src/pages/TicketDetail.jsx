@@ -12,6 +12,8 @@ export default function TicketDetail() {
   
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [ticketError, setTicketError] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState('Open');
   const [newNote, setNewNote] = useState('');
   const [submittingNote, setSubmittingNote] = useState(false);
 
@@ -31,36 +33,36 @@ export default function TicketDetail() {
 
   const loadTicket = async () => {
     setLoading(true);
+    setTicketError(null);
     try {
       const data = await getTicketDetails(ticket_id);
       setTicket(data);
       setEditedAssignee(data.assignee || '');
       setEditedPriority(data.priority || 'Medium');
       setEditedTags(data.tags || '');
+      setSelectedStatus(data.status || 'Open');
     } catch (err) {
       console.error(err);
-      toast.error('Failed to load ticket details');
-      navigate('/');
+      setTicketError(err.message || 'Ticket not found');
     } finally {
       setLoading(false);
     }
   };
 
-  // Instant Status update handler
-  const handleStatusChange = async (e) => {
-    const newStatus = e.target.value;
+  // Status save handler
+  const handleSaveStatus = async () => {
     try {
-      await updateTicket(ticket_id, { status: newStatus });
+      await updateTicket(ticket_id, { status: selectedStatus });
       
       if (window.gtag) {
         window.gtag('event', 'ticket_updated', {
           ticket_id: ticket_id,
-          status: newStatus
+          status: selectedStatus
         });
       }
 
-      setTicket(prev => ({ ...prev, status: newStatus }));
-      toast.success(`Status updated to ${newStatus}`);
+      setTicket(prev => ({ ...prev, status: selectedStatus }));
+      toast.success(`Status updated to ${selectedStatus}`);
     } catch (err) {
       console.error(err);
       toast.error('Failed to update status');
@@ -137,7 +139,7 @@ export default function TicketDetail() {
       const updatedData = await getTicketDetails(ticket_id);
       setTicket(updatedData);
       setNewNote('');
-      toast.success('Note added successfully');
+      toast.success('Note added');
     } catch (err) {
       console.error(err);
       toast.error('Failed to add note');
@@ -151,6 +153,28 @@ export default function TicketDetail() {
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-2">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600"></div>
         <span className="text-sm font-semibold text-slate-400">Loading ticket {ticket_id}...</span>
+      </div>
+    );
+  }
+
+  if (ticketError) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center text-center px-4">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 mb-4 shadow-inner">
+          <MessageSquare className="h-7 w-7 text-rose-600" />
+        </div>
+        <h1 className="font-display text-2xl font-black text-slate-900 dark:text-white">
+          Ticket {ticket_id} not found.
+        </h1>
+        <p className="mt-2 text-sm text-slate-400 dark:text-slate-500 max-w-xs">
+          It may have been deleted or the link is incorrect.
+        </p>
+        <button
+          onClick={() => navigate('/')}
+          className="mt-6 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-all"
+        >
+          Back to all tickets
+        </button>
       </div>
     );
   }
@@ -185,14 +209,22 @@ export default function TicketDetail() {
         <div className="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-sm transition-colors duration-300">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Update Status:</span>
           <select
-            value={ticket.status}
-            onChange={handleStatusChange}
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
             className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 text-sm font-semibold text-slate-755 dark:text-slate-350 outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500"
           >
             <option value="Open">Open</option>
             <option value="In Progress">In Progress</option>
             <option value="Closed">Closed</option>
           </select>
+          {selectedStatus !== ticket.status && (
+            <button
+              onClick={handleSaveStatus}
+              className="inline-flex items-center justify-center rounded-lg bg-indigo-650 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-500 hover:scale-[1.02] active:scale-[0.98] transition-all"
+            >
+              Save Status
+            </button>
+          )}
         </div>
       </div>
 
@@ -396,8 +428,7 @@ export default function TicketDetail() {
               {ticket.notes.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-600 text-center gap-1.5">
                   <MessageSquare className="h-8 w-8 text-slate-350 dark:text-slate-700" />
-                  <span className="font-semibold text-sm">No notes yet</span>
-                  <span className="text-xs">Add a note below to log updates</span>
+                  <span className="font-semibold text-sm">No notes yet. Add the first note below.</span>
                 </div>
               ) : (
                 ticket.notes.map((note, idx) => (
@@ -414,21 +445,22 @@ export default function TicketDetail() {
             </div>
 
             {/* Note Input Form */}
-            <form onSubmit={handleAddNote} className="shrink-0 border-t border-slate-100 dark:border-slate-800 pt-4">
-              <div className="relative">
-                <textarea
-                  rows="2"
-                  placeholder="Type a new note..."
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  className="block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 py-2.5 pl-3 pr-12 text-sm placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500"
-                ></textarea>
+            <form onSubmit={handleAddNote} className="shrink-0 border-t border-slate-100 dark:border-slate-800 pt-4 space-y-2">
+              <textarea
+                rows="2"
+                placeholder="Type a new note..."
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                className="block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-955 text-slate-850 dark:text-slate-100 py-2.5 px-3 text-sm placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500"
+              ></textarea>
+              <div className="flex justify-end">
                 <button
                   type="submit"
                   disabled={submittingNote || !newNote.trim()}
-                  className="absolute right-2.5 bottom-2.5 flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 active:scale-95 disabled:opacity-40 disabled:pointer-events-none transition-all"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-650 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
                 >
                   <Send className="h-3.5 w-3.5" />
+                  <span>Add Note</span>
                 </button>
               </div>
             </form>

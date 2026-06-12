@@ -100,14 +100,23 @@ router.post('/', (req, res) => {
     if (!customer_name || !customer_name.trim()) {
       return res.status(400).json({ error: 'Validation Error', message: 'Customer name is required' });
     }
+    if (customer_name.trim().length < 2) {
+      return res.status(400).json({ error: 'Validation Error', message: 'Customer name must be at least 2 characters' });
+    }
     if (!customer_email || !customer_email.trim() || !emailRegex.test(customer_email.trim())) {
-      return res.status(400).json({ error: 'Validation Error', message: 'A valid customer email is required' });
+      return res.status(400).json({ error: 'Validation Error', message: 'Please enter a valid email address' });
     }
     if (!subject || !subject.trim()) {
       return res.status(400).json({ error: 'Validation Error', message: 'Subject is required' });
     }
+    if (subject.trim().length < 5) {
+      return res.status(400).json({ error: 'Validation Error', message: 'Subject must be at least 5 characters' });
+    }
     if (!description || !description.trim()) {
       return res.status(400).json({ error: 'Validation Error', message: 'Description is required' });
+    }
+    if (description.trim().length < 10) {
+      return res.status(400).json({ error: 'Validation Error', message: 'Description must be at least 10 characters' });
     }
     if (priority && !['Low', 'Medium', 'High'].includes(priority)) {
       return res.status(400).json({ error: 'Validation Error', message: 'Priority must be Low, Medium, or High' });
