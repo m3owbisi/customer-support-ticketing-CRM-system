@@ -610,5 +610,26 @@ Documenting key decisions made and why — useful for the demo video and submiss
 
 ---
 
+## 9. Security & Authentication Strategy (MVP)
+
+For the MVP, security is intentionally simplified to avoid the overhead of complex, auth-heavy boilerplates:
+- **Open Access**: In alignment with the PRD, no authentication gate (JWT, bcrypt, sessions, or Clerk/Auth0 integrations) is implemented. The application relies on URL-based deep linking for open team access.
+- **CORS Protection**: The Express backend enforces CORS using the `cors` middleware, allowing API traffic strictly from the configured `FRONTEND_URL` origin.
+- **SQL Injection Prevention**: All database queries are parameterized using `node:sqlite`'s built-in `Statement` preparation (`db.prepare(...)`), preventing SQL injection attacks without needing an ORM.
+- **Environment Isolation**: API URLs, ports, and environment configurations are strictly separated into local `.env` files and environment variables, keeping credentials out of version control.
+
+---
+
+## 10. Out of Scope Technologies (PRD Alignment)
+
+To maintain a lean codebase, the following boilerplate technologies are strictly omitted:
+- **Authentication & Hashing**: JWT, sessions, cookie parsers, and bcrypt are not installed or configured.
+- **External Database Servers & ORMs**: Prisma, Drizzle, Sequelize, PostgreSQL, and MySQL are replaced entirely by a local, native SQLite database.
+- **Caching Layer**: Redis and in-memory caches are omitted; synchronous SQLite query speeds are sufficient for the scale of this internal tool.
+- **File & Media Storage**: AWS S3, Cloudinary, and disk-based file upload middleware (e.g., Multer) are omitted as tickets are text-only.
+- **Email Service**: SendGrid, Resend, and nodemailer are not integrated; outbound notification flows do not exist in this MVP.
+
+---
+
 *This document covers the MVP technology choices only.*  
 *Companion documents: `PRD.md` · `APP_FLOW.md` · `README.md`*
