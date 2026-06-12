@@ -47,6 +47,14 @@ export default function TicketDetail() {
     const newStatus = e.target.value;
     try {
       await updateTicket(ticket_id, { status: newStatus });
+      
+      if (window.gtag) {
+        window.gtag('event', 'ticket_updated', {
+          ticket_id: ticket_id,
+          status: newStatus
+        });
+      }
+
       setTicket(prev => ({ ...prev, status: newStatus }));
       toast.success(`Status updated to ${newStatus}`);
     } catch (err) {
@@ -59,6 +67,14 @@ export default function TicketDetail() {
   const handleSaveAssignee = async () => {
     try {
       await updateTicket(ticket_id, { assignee: editedAssignee });
+      
+      if (window.gtag) {
+        window.gtag('event', 'ticket_updated', {
+          ticket_id: ticket_id,
+          assignee: editedAssignee || 'Unassigned'
+        });
+      }
+
       setTicket(prev => ({ ...prev, assignee: editedAssignee || null }));
       setIsEditingAssignee(false);
       toast.success('Assignee updated successfully');
@@ -72,6 +88,14 @@ export default function TicketDetail() {
   const handleSavePriority = async () => {
     try {
       await updateTicket(ticket_id, { priority: editedPriority });
+      
+      if (window.gtag) {
+        window.gtag('event', 'ticket_updated', {
+          ticket_id: ticket_id,
+          priority: editedPriority
+        });
+      }
+
       setTicket(prev => ({ ...prev, priority: editedPriority }));
       setIsEditingPriority(false);
       toast.success('Priority updated successfully');

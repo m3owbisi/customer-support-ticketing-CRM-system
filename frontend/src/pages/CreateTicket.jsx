@@ -61,6 +61,15 @@ export default function CreateTicket() {
     setLoading(true);
     try {
       const result = await createTicket(formData);
+      
+      if (window.gtag) {
+        window.gtag('event', 'ticket_created', {
+          ticket_id: result.ticket_id,
+          priority: formData.priority,
+          assignee: formData.assignee || 'Unassigned'
+        });
+      }
+
       toast.success(`Ticket Created: ${result.ticket_id}`, {
         duration: 5000,
         position: 'top-right'
