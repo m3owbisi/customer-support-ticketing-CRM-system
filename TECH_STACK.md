@@ -293,13 +293,11 @@ function generateTicketId(db) {
 
 ### Caching
 
-**None in MVP.** SQLite reads are synchronous and fast for < 10,000 rows. API response times will be well under 100ms without caching. Redis or in-memory caching would be premature optimisation.
+**None in MVP.** SQLite reads are synchronous and fast for < 10,000 rows. API response times will be well under 100ms without caching.
 
 ### Authentication
 
 **None in MVP.** Authentication is explicitly out of scope (see PRD §7). The API is open-access. CORS restricts API access to the known frontend origin, which is sufficient for a demo deployment.
-
-**V2 path**: Add a `users` table, `POST /api/auth/login` → JWT, and an Express `authenticate` middleware function prepended to protected routes. The current route structure is designed to accept middleware insertion without refactoring.
 
 ### File Storage
 
@@ -600,15 +598,15 @@ Documenting key decisions made and why — useful for the demo video and submiss
 
 | Decision | Option Chosen | Options Rejected | Reason |
 |----------|--------------|-----------------|--------|
-| DB | SQLite + better-sqlite3 | PostgreSQL, MongoDB, MySQL | Zero config, no external server, free, synchronous API, sufficient for demo scale |
-| Frontend | React + Vite | Next.js, Vue, Svelte | React is most widely understood; Vite is faster than CRA; Next.js SSR is unnecessary overhead |
-| API style | REST | GraphQL, tRPC | REST matches the assessment spec exactly; simpler to explain and test |
-| ORM | None (raw SQL) | Prisma, Sequelize, Drizzle | 3 tables, 4 endpoints — an ORM is abstraction without value at this scale |
-| State management | useState/useEffect | Zustand, Redux, Context | 4 pages, each owns its state — no shared state problem to solve |
-| Auth | None (MVP) | JWT, sessions, Clerk | Explicitly out of scope per PRD; architecture supports adding it in V2 |
-| CSS | Tailwind | CSS Modules, styled-components, plain CSS | Fastest to write, most consistent output, responsive utilities built-in |
-| Deployment | Render + Vercel | Railway, Fly.io, Heroku, Netlify | Most straightforward free path for this exact stack (Node.js + static SPA) |
-| TypeScript | No (JS only) | TypeScript strict mode | 3-day MVP, solo developer — JS ships faster; architecture is TS-ready for V2 |
+| DB | SQLite + `node:sqlite` | External database servers (PostgreSQL, MySQL) | Zero config, no external server, file-based, native Node.js support, sufficient for demo scale |
+| Frontend | React + Vite | Multi-page / SSR frameworks | React is most widely understood; Vite is faster than CRA; SSR is unnecessary overhead for internal tools |
+| API style | REST | GraphQL, gRPC | REST matches the assessment spec exactly; simpler to explain and test |
+| ORM | None (raw SQL) | ORM libraries | 3 tables, 4 endpoints — an ORM is abstraction without value at this scale |
+| State management | useState/useEffect | State management libraries | 4 pages, each owns its state — no shared state problem to solve |
+| Auth | None (MVP) | Auth systems | Explicitly out of scope per PRD |
+| CSS | Tailwind | CSS Modules, plain CSS | Fastest to write, most consistent output, responsive utilities built-in |
+| Deployment | Render + Vercel | Alternative hosting platforms | Most straightforward free path for this exact stack (Node.js + static SPA) |
+| TypeScript | No (JS only) | TypeScript | 3-day MVP, solo developer — JS ships faster |
 
 ---
 
