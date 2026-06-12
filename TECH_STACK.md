@@ -237,39 +237,46 @@ api.interceptors.response.use(
 | Property | Value |
 |----------|-------|
 | **Database** | SQLite |
-| **Version** | Bundled with `better-sqlite3` |
-| **Client** | `better-sqlite3` 9.4.3 |
+| **Version** | Native SQLite in Node.js (Node 22+) |
+| **Client** | `node:sqlite` (`DatabaseSync`) |
 | **File path** | `/backend/database.sqlite` (gitignored) |
-| **Reason** | Zero config, no external server, file-based, synchronous API, works on Render free tier without a separate DB service |
-| **Documentation** | https://github.com/WiseLibs/better-sqlite3/blob/master/docs/api.md |
+| **Reason** | Zero config, built-in native support, file-based, synchronous API, works on Render free tier without an external DB server |
+| **Documentation** | https://nodejs.org/docs/latest/api/sqlite.html |
 | **License** | MIT |
 
 **Why not PostgreSQL**: PostgreSQL requires a separate DB server (Supabase, Railway Postgres, Neon, etc.), connection string configuration, and adds ~$0–5/month cost. For a demo CRM with < 1,000 rows, SQLite is not only sufficient — it is faster for single-server workloads.
 
-**Why not Prisma/Sequelize ORM**: An ORM adds a dependency, an abstraction layer, and migration tooling for 3 tables and 4 endpoints. Raw parameterised SQL with `better-sqlite3` is ~40 lines for the full data layer and is easier to read, debug, and explain.
+**Why not Prisma/Sequelize ORM**: An ORM adds a dependency, an abstraction layer, and migration tooling for 3 tables and 4 endpoints. Raw parameterized SQL with `node:sqlite` is ~40 lines for the full data layer and is easier to read, debug, and explain.
 
 **Schema initialisation** (`src/db.js`):
 ```javascript
-const db = new Database(path.join(__dirname, '../database.sqlite'));
+const { DatabaseSync } = require('node:sqlite');
+const path = require('path');
+const dbPath = path.resolve(__dirname, '../database.sqlite');
+const db = new DatabaseSync(dbPath);
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS tickets (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    ticket_id    TEXT    UNIQUE NOT NULL,
-    customer_name  TEXT  NOT NULL,
-    customer_email TEXT  NOT NULL,
-    subject      TEXT    NOT NULL,
-    description  TEXT    NOT NULL,
-    status       TEXT    NOT NULL DEFAULT 'Open',
-    created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ticket_id TEXT UNIQUE NOT NULL,
+    customer_name TEXT NOT NULL,
+    customer_email TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    description TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'Open' CHECK(status IN ('Open', 'In Progress', 'Closed')),
+    priority TEXT NOT NULL DEFAULT 'Medium' CHECK(priority IN ('Low', 'Medium', 'High')),
+    assignee TEXT DEFAULT NULL,
+    tags TEXT DEFAULT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
   CREATE TABLE IF NOT EXISTS notes (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    ticket_id  TEXT    NOT NULL REFERENCES tickets(ticket_id),
-    note_text  TEXT    NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ticket_id TEXT NOT NULL,
+    note_text TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(ticket_id) REFERENCES tickets(ticket_id) ON DELETE CASCADE
   );
 `);
 ```
@@ -516,8 +523,6 @@ VITE_API_URL=http://localhost:3001
 | `FRONTEND_URL` | Render dashboard | Copy from Vercel deployment URL |
 | `VITE_API_URL` | Vercel dashboard (Environment Variables) | Copy from Render service URL |
 
----
-
 ## 7. Dependency Summary
 
 ### Backend (`/backend/package.json`)
@@ -525,58 +530,60 @@ VITE_API_URL=http://localhost:3001
 ```json
 {
   "dependencies": {
-    "better-sqlite3": "^9.4.3",
     "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "morgan": "^1.10.0"
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
   },
   "devDependencies": {
-    "eslint": "^8.56.0",
-    "nodemon": "^3.0.3",
-    "prettier": "^3.2.4"
+    "nodemon": "^3.1.3"
   }
 }
 ```
 
-**Total production dependencies: 3** (express, cors, better-sqlite3). Morgan is optional but recommended for visible request logging during the demo.
+**Backend Scripts & Jobs:**
+- `start` — `node src/index.js` (plain `node` for production, what Render runs)
+- `dev` — `nodemon src/index.js` (watches for file changes and auto-restarts)
+- `db:seed` — `node src/seed.js` (inserts 10 sample tickets so evaluators do not land on an empty list)
+- `db:reset` — `node src/reset.js` (drops and recreates the database schema)
 
 ### Frontend (`/frontend/package.json`)
 
 ```json
 {
   "dependencies": {
-    "axios": "^1.6.5",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "axios": "^1.7.2",
+    "lucide-react": "^0.395.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-hot-toast": "^2.4.1",
-    "react-router-dom": "^6.22.0"
+    "react-router-dom": "^6.23.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.2.1",
-    "autoprefixer": "^10.4.17",
-    "eslint": "^8.56.0",
-    "postcss": "^8.4.35",
-    "prettier": "^3.2.4",
-    "tailwindcss": "^3.4.1",
-    "vite": "^5.0.12"
+    "@tailwindcss/vite": "^4.0.0-alpha.16",
+    "@vitejs/plugin-react": "^4.3.0",
+    "tailwindcss": "^4.0.0-alpha.16",
+    "vite": "^5.2.11"
   }
 }
 ```
 
-**Total production dependencies: 5** (react, react-dom, react-router-dom, axios, react-hot-toast).
+**Frontend Scripts & Jobs:**
+- `dev` — `vite` (starts the Vite dev server at `localhost:5173` with HMR)
+- `build` — `vite build` (creates the `dist/` production folder deployed on Vercel)
+- `preview` — `vite preview` (serves the production build locally to verify before deploying)
 
 ### Dependency Philosophy
 
 > **Every dependency is a maintenance cost and an attack surface. Add only what you need and can explain.**
 
-This stack was chosen to be explainable line-by-line in a 5-minute demo video. Every library has one clear job:
+This stack was chosen to be explainable line-by-line. Every library has one clear job:
 
 | Library | One-sentence job |
 |---------|-----------------|
 | `express` | Handle HTTP routing and middleware on the server |
 | `cors` | Allow the Vercel frontend to call the Render API |
-| `better-sqlite3` | Read and write to the SQLite database file |
-| `morgan` | Print requests to the terminal during development |
+| `dotenv` | Load environment variables from a `.env` file |
+| `nodemon` | Monitor server files and restart on changes during development |
 | `react` | Build the UI as a tree of reusable components |
 | `react-dom` | Mount the React component tree into the browser DOM |
 | `react-router-dom` | Map URL paths to page components |
