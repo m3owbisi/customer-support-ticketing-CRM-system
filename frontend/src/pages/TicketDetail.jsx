@@ -14,6 +14,7 @@ export default function TicketDetail() {
   const [loading, setLoading] = useState(true);
   const [ticketError, setTicketError] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState('Open');
+  const [savingStatus, setSavingStatus] = useState(false);
   const [newNote, setNewNote] = useState('');
   const [submittingNote, setSubmittingNote] = useState(false);
 
@@ -51,6 +52,7 @@ export default function TicketDetail() {
 
   // Status save handler
   const handleSaveStatus = async () => {
+    setSavingStatus(true);
     try {
       await updateTicket(ticket_id, { status: selectedStatus });
       
@@ -66,6 +68,11 @@ export default function TicketDetail() {
     } catch (err) {
       console.error(err);
       toast.error('Failed to update status');
+      if (ticket) {
+        setSelectedStatus(ticket.status);
+      }
+    } finally {
+      setSavingStatus(false);
     }
   };
 
@@ -150,9 +157,61 @@ export default function TicketDetail() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-2">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600"></div>
-        <span className="text-sm font-semibold text-slate-400">Loading ticket {ticket_id}...</span>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 animate-pulse">
+        {/* Back button skeleton */}
+        <div className="mb-6 h-5 w-20 rounded bg-slate-200 dark:bg-slate-800"></div>
+
+        {/* Header skeleton */}
+        <div className="mb-8 border-b border-slate-200 dark:border-slate-800 pb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="flex gap-2 mb-2">
+              <div className="h-6 w-16 rounded bg-slate-200 dark:bg-slate-800"></div>
+              <div className="h-6 w-20 rounded bg-slate-200 dark:bg-slate-800"></div>
+              <div className="h-6 w-16 rounded bg-slate-200 dark:bg-slate-800"></div>
+            </div>
+            <div className="h-8 w-80 rounded bg-slate-200 dark:bg-slate-800"></div>
+          </div>
+          <div className="h-12 w-48 rounded bg-slate-200 dark:bg-slate-800"></div>
+        </div>
+
+        {/* Grid skeleton */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <div className="space-y-6 lg:col-span-2">
+            {/* Info grid block */}
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-6 space-y-4 bg-white dark:bg-slate-900">
+              <div className="h-6 w-32 rounded bg-slate-200 dark:bg-slate-800"></div>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <div className="h-3 w-16 rounded bg-slate-200 dark:bg-slate-800"></div>
+                    <div className="h-4 w-36 rounded bg-slate-200 dark:bg-slate-800"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Description block */}
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-6 space-y-4 bg-white dark:bg-slate-900">
+              <div className="h-6 w-32 rounded bg-slate-200 dark:bg-slate-800"></div>
+              <div className="space-y-2">
+                <div className="h-4 w-full rounded bg-slate-200 dark:bg-slate-800"></div>
+                <div className="h-4 w-full rounded bg-slate-200 dark:bg-slate-800"></div>
+                <div className="h-4 w-3/4 rounded bg-slate-200 dark:bg-slate-800"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Notes section block */}
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-6 h-[520px] flex flex-col justify-between bg-white dark:bg-slate-900">
+            <div className="space-y-4">
+              <div className="h-6 w-24 rounded bg-slate-200 dark:bg-slate-800"></div>
+              <div className="space-y-3">
+                <div className="h-16 w-full rounded bg-slate-200 dark:bg-slate-800"></div>
+                <div className="h-16 w-full rounded bg-slate-200 dark:bg-slate-800"></div>
+              </div>
+            </div>
+            <div className="h-20 w-full rounded bg-slate-200 dark:bg-slate-800"></div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -210,8 +269,9 @@ export default function TicketDetail() {
           <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Update Status:</span>
           <select
             value={selectedStatus}
+            disabled={savingStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 text-sm font-semibold text-slate-755 dark:text-slate-350 outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500"
+            className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 text-sm font-semibold text-slate-755 dark:text-slate-350 outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
           >
             <option value="Open">Open</option>
             <option value="In Progress">In Progress</option>
@@ -220,9 +280,10 @@ export default function TicketDetail() {
           {selectedStatus !== ticket.status && (
             <button
               onClick={handleSaveStatus}
-              className="inline-flex items-center justify-center rounded-lg bg-indigo-650 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-500 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              disabled={savingStatus}
+              className="inline-flex items-center justify-center rounded-lg bg-indigo-650 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-500 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
             >
-              Save Status
+              {savingStatus ? 'Saving...' : 'Save Status'}
             </button>
           )}
         </div>
@@ -450,8 +511,9 @@ export default function TicketDetail() {
                 rows="2"
                 placeholder="Type a new note..."
                 value={newNote}
+                disabled={submittingNote}
                 onChange={(e) => setNewNote(e.target.value)}
-                className="block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-955 text-slate-850 dark:text-slate-100 py-2.5 px-3 text-sm placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500"
+                className="block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-955 text-slate-855 dark:text-slate-100 py-2.5 px-3 text-sm placeholder-slate-400 dark:placeholder-slate-505 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
               ></textarea>
               <div className="flex justify-end">
                 <button

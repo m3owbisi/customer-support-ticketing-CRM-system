@@ -22,11 +22,13 @@ export default function TicketList() {
   const [searchVal, setSearchVal] = useState(initialSearch);
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const [page, setPage] = useState(initialPage);
+  const [refreshKey, setRefreshKey] = useState(0);
   
   const [tickets, setTickets] = useState([]);
   const [total, setTotal] = useState(0);
   const [summary, setSummary] = useState({ total: 0, open: 0, in_progress: 0, closed: 0 });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const isFirstMount = useRef(true);
 
@@ -76,6 +78,7 @@ export default function TicketList() {
     let active = true;
     const loadTickets = async () => {
       setLoading(true);
+      setError(false);
       try {
         const data = await getTickets({
           status: statusFilter,
@@ -91,6 +94,7 @@ export default function TicketList() {
         }
       } catch (err) {
         console.error(err);
+        if (active) setError(true);
         toast.error('Failed to load tickets');
       } finally {
         if (active) setLoading(false);
@@ -98,7 +102,7 @@ export default function TicketList() {
     };
     loadTickets();
     return () => { active = false; };
-  }, [statusFilter, priorityFilter, debouncedSearch, page]);
+  }, [statusFilter, priorityFilter, debouncedSearch, page, refreshKey]);
 
   // Reset page to 1 when status or priority changes
   const handleStatusChange = (status) => {
@@ -266,8 +270,16 @@ export default function TicketList() {
             placeholder="Search by ID, name, email, subject, tag... (Press '/' to focus)"
             value={searchVal}
             onChange={(e) => setSearchVal(e.target.value)}
-            className="block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 py-2.5 pl-10 pr-3 text-sm placeholder-slate-400 dark:placeholder-slate-500 text-slate-800 dark:text-slate-100 transition-all focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500 outline-none"
+            className="block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 py-2.5 pl-10 pr-10 text-sm placeholder-slate-400 dark:placeholder-slate-500 text-slate-800 dark:text-slate-100 transition-all focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500 outline-none"
           />
+          {searchVal && (
+            <button
+              onClick={() => { setSearchVal(''); setDebouncedSearch(''); }}
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-650 dark:hover:text-slate-200 text-lg font-bold"
+            >
+              &times;
+            </button>
+          )}
         </div>
 
         {/* Filters */}
@@ -314,164 +326,203 @@ export default function TicketList() {
       {/* Result Count */}
       <div className="mb-4 flex items-center justify-between px-1">
         <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-          {!loading && `${total} ${total === 1 ? 'ticket' : 'tickets'} found`}
+          {!loading && !error && `Showing ${total === 0 ? 0 : (page - 1) * 8 + 1}-${Math.min(page * 8, total)} of ${total} tickets`}
         </span>
       </div>
 
-      {/* Ticket Table */}
-      <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-colors duration-300">
-        <div className="min-w-full overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-850 text-left">
-            <thead className="bg-slate-50 dark:bg-slate-950/40 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
-              <tr>
-                <th className="px-6 py-4">Ticket ID</th>
-                <th className="px-6 py-4">Customer</th>
-                <th className="px-6 py-4">Subject & Tags</th>
-                <th className="px-6 py-4 text-center">Priority</th>
-                <th className="px-6 py-4 text-center">Status</th>
-                <th className="px-6 py-4">Assignee</th>
-                <th className="px-6 py-4">Created Date</th>
-                <th className="relative px-6 py-4"><span className="sr-only">View</span></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
-              {loading ? (
+      {error ? (
+        <div className="rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 p-10 text-center text-red-800 dark:text-red-400 shadow-sm transition-all duration-300">
+          <p className="font-semibold text-sm">Could not load tickets. Please refresh the page.</p>
+          <button
+            onClick={() => setRefreshKey(prev => prev + 1)}
+            className="mt-4 inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-red-500 active:scale-[0.98] transition-all"
+          >
+            Retry
+          </button>
+        </div>
+      ) : (
+        /* Ticket Table */
+        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-colors duration-300">
+          <div className="min-w-full overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-850 text-left">
+              <thead className="bg-slate-50 dark:bg-slate-950/40 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <td colSpan="8" className="px-6 py-10 text-center">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600"></div>
-                      <span className="text-sm text-slate-400">Loading tickets...</span>
-                    </div>
-                  </td>
+                  <th className="px-6 py-4">Ticket ID</th>
+                  <th className="px-6 py-4">Customer</th>
+                  <th className="px-6 py-4">Subject & Tags</th>
+                  <th className="px-6 py-4 text-center">Priority</th>
+                  <th className="px-6 py-4 text-center">Status</th>
+                  <th className="px-6 py-4">Assignee</th>
+                  <th className="px-6 py-4">Created Date</th>
+                  <th className="relative px-6 py-4"><span className="sr-only">View</span></th>
                 </tr>
-              ) : tickets.length === 0 ? (
-                <tr>
-                  <td colSpan="8" className="px-6 py-12 text-center text-slate-400 dark:text-slate-500">
-                    <div className="flex flex-col items-center justify-center gap-1.5 py-4">
-                      <ClipboardList className="h-10 w-10 text-slate-350 dark:text-slate-700" />
-                      {summary.total === 0 ? (
-                        <>
-                          <span className="font-semibold text-slate-500 dark:text-slate-400 text-sm">
-                            No tickets yet. Create your first ticket to get started.
-                          </span>
-                          <button
-                            onClick={() => navigate('/tickets/new')}
-                            className="mt-2.5 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-indigo-500 transition-all"
-                          >
-                            New Ticket
-                          </button>
-                        </>
-                      ) : debouncedSearch ? (
-                        <>
-                          <span className="font-semibold text-slate-500 dark:text-slate-400 text-sm">
-                            No tickets match '{debouncedSearch}'. Try a different search.
-                          </span>
-                          <button
-                            onClick={() => { setSearchVal(''); setDebouncedSearch(''); }}
-                            className="mt-2.5 inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
-                          >
-                            <span>Clear Search</span>
-                            <span className="text-sm font-semibold">&times;</span>
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <span className="font-semibold text-slate-500 dark:text-slate-400 text-sm">
-                            No {statusFilter !== 'All' ? statusFilter : ''} tickets found.
-                          </span>
-                          <button
-                            onClick={() => { setStatusFilter('All'); setPriorityFilter('All'); }}
-                            className="mt-2.5 text-xs font-bold text-indigo-650 dark:text-indigo-400 hover:underline"
-                          >
-                            View all tickets
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                tickets.map((ticket) => (
-                  <tr
-                    key={ticket.ticket_id}
-                    onClick={() => navigate(`/tickets/${ticket.ticket_id}`)}
-                    className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/40 cursor-pointer transition-colors"
-                  >
-                    <td className="whitespace-nowrap px-6 py-4 text-sm font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">
-                      {ticket.ticket_id}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4">
-                      <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{ticket.customer_name}</div>
-                      <div className="text-xs text-slate-400 dark:text-slate-500">{ticket.customer_email}</div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-300 max-w-xs font-medium">
-                      <div className="truncate">{ticket.subject}</div>
-                      {ticket.tags && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {ticket.tags.split(',').map((tag) => (
-                            <span key={tag} className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-400 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
-                              {tag.trim()}
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, idx) => (
+                    <tr key={idx} className="animate-pulse">
+                      <td className="whitespace-nowrap px-6 py-4.5">
+                        <div className="h-4 w-12 rounded bg-slate-200 dark:bg-slate-800"></div>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4.5">
+                        <div className="h-4 w-24 rounded bg-slate-200 dark:bg-slate-800 mb-1.5"></div>
+                        <div className="h-3 w-32 rounded bg-slate-205 dark:bg-slate-850"></div>
+                      </td>
+                      <td className="px-6 py-4.5">
+                        <div className="h-4 w-48 rounded bg-slate-200 dark:bg-slate-800"></div>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4.5 text-center">
+                        <div className="h-5 w-16 mx-auto rounded bg-slate-200 dark:bg-slate-800"></div>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4.5 text-center">
+                        <div className="h-5 w-20 mx-auto rounded bg-slate-200 dark:bg-slate-800"></div>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4.5">
+                        <div className="h-4 w-20 rounded bg-slate-200 dark:bg-slate-800"></div>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4.5">
+                        <div className="h-4 w-24 rounded bg-slate-200 dark:bg-slate-800"></div>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4.5 text-right">
+                        <div className="h-4 w-8 ml-auto rounded bg-slate-200 dark:bg-slate-800"></div>
+                      </td>
+                    </tr>
+                  ))
+                ) : tickets.length === 0 ? (
+                  <tr>
+                    <td colSpan="8" className="px-6 py-12 text-center text-slate-400 dark:text-slate-500">
+                      <div className="flex flex-col items-center justify-center gap-1.5 py-4">
+                        <ClipboardList className="h-10 w-10 text-slate-350 dark:text-slate-700" />
+                        {summary.total === 0 ? (
+                          <>
+                            <span className="font-semibold text-slate-500 dark:text-slate-400 text-sm">
+                              No tickets yet. Create your first ticket to get started.
                             </span>
-                          ))}
-                        </div>
-                      )}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-center">
-                      <PriorityBadge priority={ticket.priority} />
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-center">
-                      <StatusBadge status={ticket.status} />
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-550 dark:text-slate-400 font-medium">
-                      {ticket.assignee || (
-                        <span className="italic text-slate-400 dark:text-slate-600">Unassigned</span>
-                      )}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-400 dark:text-slate-500 font-medium">
-                      {new Date(ticket.created_at).toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold">
-                      <span className="flex items-center justify-end gap-1 text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span>Details</span>
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </span>
+                            <button
+                              onClick={() => navigate('/tickets/new')}
+                              className="mt-2.5 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-indigo-500 transition-all"
+                            >
+                              New Ticket
+                            </button>
+                          </>
+                        ) : debouncedSearch ? (
+                          <>
+                            <span className="font-semibold text-slate-500 dark:text-slate-400 text-sm">
+                              No tickets match '{debouncedSearch}'. Try a different search.
+                            </span>
+                            <button
+                              onClick={() => { setSearchVal(''); setDebouncedSearch(''); }}
+                              className="mt-2.5 inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-305 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                            >
+                              <span>Clear Search</span>
+                              <span className="text-sm font-semibold">&times;</span>
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-semibold text-slate-500 dark:text-slate-400 text-sm">
+                              No {statusFilter !== 'All' ? statusFilter : ''} tickets found.
+                            </span>
+                            <button
+                              onClick={() => { setStatusFilter('All'); setPriorityFilter('All'); }}
+                              className="mt-2.5 text-xs font-bold text-indigo-650 dark:text-indigo-400 hover:underline"
+                            >
+                              View all tickets
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination bar */}
-        {!loading && tickets.length > 0 && (
-          <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 px-6 py-4">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Showing page {page} of {totalPages} ({total} total)
-            </span>
-            <div className="flex gap-2">
-              <button
-                disabled={page <= 1}
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
-              >
-                Previous
-              </button>
-              <button
-                disabled={page >= totalPages}
-                onClick={() => setPage(p => p + 1)}
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
-              >
-                Next
-              </button>
-            </div>
+                ) : (
+                  tickets.map((ticket) => (
+                    <tr
+                      key={ticket.ticket_id}
+                      onClick={() => navigate(`/tickets/${ticket.ticket_id}`)}
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          navigate(`/tickets/${ticket.ticket_id}`);
+                        }
+                      }}
+                      className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/40 focus:bg-slate-50/80 dark:focus:bg-slate-800/40 focus:outline-none cursor-pointer transition-colors"
+                    >
+                      <td className="whitespace-nowrap px-6 py-4 text-sm font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">
+                        {ticket.ticket_id}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{ticket.customer_name}</div>
+                        <div className="text-xs text-slate-400 dark:text-slate-500">{ticket.customer_email}</div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-300 max-w-xs font-medium">
+                        <div className="truncate">{ticket.subject}</div>
+                        {ticket.tags && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {ticket.tags.split(',').map((tag) => (
+                              <span key={tag} className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-400 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                                {tag.trim()}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-center">
+                        <PriorityBadge priority={ticket.priority} />
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-center">
+                        <StatusBadge status={ticket.status} />
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-550 dark:text-slate-400 font-medium">
+                        {ticket.assignee || (
+                          <span className="italic text-slate-400 dark:text-slate-600">Unassigned</span>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-400 dark:text-slate-500 font-medium">
+                        {new Date(ticket.created_at).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold">
+                        <span className="flex items-center justify-end gap-1 text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span>Details</span>
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
-      </div>
+
+          {/* Pagination bar */}
+          {!loading && tickets.length > 0 && (
+            <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 px-6 py-4">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Showing page {page} of {totalPages} ({total} total)
+              </span>
+              <div className="flex gap-2">
+                <button
+                  disabled={page <= 1}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
+                >
+                  Previous
+                </button>
+                <button
+                  disabled={page >= totalPages}
+                  onClick={() => setPage(p => p + 1)}
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
