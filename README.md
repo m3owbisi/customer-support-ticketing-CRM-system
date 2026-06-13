@@ -20,7 +20,7 @@ A full-stack Customer Support Ticketing System that allows teams to create, mana
     [https://customer-support-ticketing-crm-system-k22t.onrender.com](https://customer-support-ticketing-crm-system-k22t.onrender.com)
 
 *   🎥 **Demo Video**:  
-    [Add your video link here]
+    [https://canva.link/cnv9w6t2qnpzirh]
 
 ---
 
