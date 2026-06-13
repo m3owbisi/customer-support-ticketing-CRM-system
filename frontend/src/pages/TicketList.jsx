@@ -233,7 +233,7 @@ export default function TicketList() {
       {/* Ticket Count Summary Bar */}
       <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {/* Total Card */}
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-905 p-5 shadow-sm hover:shadow-md dark:bg-slate-900/60 dark:hover:border-slate-700 transition-all duration-300">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm hover:shadow-md dark:bg-slate-900/60 dark:hover:border-slate-700 transition-all duration-300">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
               <ClipboardList className="h-5 w-5" />
@@ -246,7 +246,7 @@ export default function TicketList() {
         </div>
 
         {/* Open Card */}
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-905 p-5 shadow-sm hover:shadow-md dark:bg-slate-900/60 dark:hover:border-slate-700 transition-all duration-300">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm hover:shadow-md dark:bg-slate-900/60 dark:hover:border-slate-700 transition-all duration-300">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-450">
               <AlertCircle className="h-5 w-5" />
@@ -259,7 +259,7 @@ export default function TicketList() {
         </div>
 
         {/* In Progress Card */}
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-905 p-5 shadow-sm hover:shadow-md dark:bg-slate-900/60 dark:hover:border-slate-700 transition-all duration-300">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm hover:shadow-md dark:bg-slate-900/60 dark:hover:border-slate-700 transition-all duration-300">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-450">
               <Clock className="h-5 w-5" />
@@ -272,7 +272,7 @@ export default function TicketList() {
         </div>
 
         {/* Closed Card */}
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-905 p-5 shadow-sm hover:shadow-md dark:bg-slate-900/60 dark:hover:border-slate-700 transition-all duration-300">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm hover:shadow-md dark:bg-slate-900/60 dark:hover:border-slate-700 transition-all duration-300">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-450">
               <CheckCircle className="h-5 w-5" />
@@ -299,12 +299,12 @@ export default function TicketList() {
             value={searchVal}
             disabled={!isOnline}
             onChange={(e) => setSearchVal(e.target.value)}
-            className="block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 py-2.5 pl-10 pr-10 text-sm placeholder-slate-400 dark:placeholder-slate-505 text-slate-800 dark:text-slate-100 transition-all focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500 outline-none disabled:opacity-55 disabled:bg-slate-100 dark:disabled:bg-slate-950 disabled:cursor-not-allowed"
+            className="block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 py-2.5 pl-10 pr-10 text-sm placeholder-slate-400 dark:placeholder-slate-500 text-slate-800 dark:text-slate-100 transition-all focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500 outline-none disabled:opacity-50 disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:cursor-not-allowed"
           />
           {searchVal && (
             <button
               onClick={() => { setSearchVal(''); setDebouncedSearch(''); }}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-650 dark:hover:text-slate-200 text-lg font-bold"
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg font-bold"
             >
               &times;
             </button>
@@ -342,7 +342,7 @@ export default function TicketList() {
                 className={`border-b-2 py-4 px-1 text-sm font-semibold transition-all ${
                   isActive
                     ? 'border-indigo-600 text-indigo-600'
-                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:border-slate-350 dark:hover:border-slate-700 hover:text-slate-700 dark:hover:text-slate-200'
+                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
                 {tab}
@@ -388,7 +388,7 @@ export default function TicketList() {
             ) : tickets.length === 0 ? (
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center text-slate-400 dark:text-slate-500">
                 <div className="flex flex-col items-center justify-center gap-1.5 py-4">
-                  <ClipboardList className="h-10 w-10 text-slate-350 dark:text-slate-700" />
+                  <ClipboardList className="h-10 w-10 text-slate-300 dark:text-slate-700" />
                   {summary.total === 0 ? (
                     <>
                       <span className="font-semibold text-slate-500 dark:text-slate-400 text-sm">
@@ -408,7 +408,7 @@ export default function TicketList() {
                       </span>
                       <button
                         onClick={() => { setSearchVal(''); setDebouncedSearch(''); }}
-                        className="mt-2.5 inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-305 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                        className="mt-2.5 inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
                       >
                         <span>Clear Search</span>
                         <span className="text-sm font-semibold">&times;</span>
@@ -421,7 +421,7 @@ export default function TicketList() {
                       </span>
                       <button
                         onClick={() => { setStatusFilter('All'); setPriorityFilter('All'); }}
-                        className="mt-2.5 text-xs font-bold text-indigo-650 dark:text-indigo-400 hover:underline"
+                        className="mt-2.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
                       >
                         View all tickets
                       </button>
@@ -463,21 +463,21 @@ export default function TicketList() {
             {/* Mobile Pagination */}
             {!loading && tickets.length > 0 && (
               <div className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 shadow-sm">
-                <span className="text-xs font-semibold text-slate-550 dark:text-slate-400 uppercase tracking-wider">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Page {page} of {totalPages}
                 </span>
                 <div className="flex gap-2">
                   <button
                     disabled={page <= 1}
                     onClick={() => setPage(p => Math.max(1, p - 1))}
-                    className="inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-55 dark:bg-slate-950 px-3 py-1 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-sm active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
+                    className="inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-sm active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
                   >
                     Prev
                   </button>
                   <button
                     disabled={page >= totalPages}
                     onClick={() => setPage(p => p + 1)}
-                    className="inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-55 dark:bg-slate-950 px-3 py-1 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-sm active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
+                    className="inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-sm active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
                   >
                     Next
                   </button>
@@ -489,8 +489,8 @@ export default function TicketList() {
           {/* Desktop Table View */}
           <div className="hidden sm:block overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-colors duration-300">
             <div className="min-w-full overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-850 text-left">
-                <thead className="bg-slate-50 dark:bg-slate-955/40 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left">
+                <thead className="bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="px-6 py-4">Ticket ID</th>
                     <th className="px-6 py-4">Customer</th>
@@ -511,7 +511,7 @@ export default function TicketList() {
                         </td>
                         <td className="whitespace-nowrap px-6 py-4.5">
                           <div className="h-4 w-24 rounded bg-slate-200 dark:bg-slate-800 mb-1.5"></div>
-                          <div className="h-3 w-32 rounded bg-slate-205 dark:bg-slate-850"></div>
+                          <div className="h-3 w-32 rounded bg-slate-200 dark:bg-slate-800"></div>
                         </td>
                         <td className="px-6 py-4.5">
                           <div className="h-4 w-48 rounded bg-slate-200 dark:bg-slate-800"></div>
@@ -557,7 +557,7 @@ export default function TicketList() {
                               </span>
                               <button
                                 onClick={() => { setSearchVal(''); setDebouncedSearch(''); }}
-                                className="mt-2.5 inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-305 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                                className="mt-2.5 inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-55 dark:hover:bg-slate-800 transition-all"
                               >
                                 <span>Clear Search</span>
                                 <span className="text-sm font-semibold">&times;</span>
@@ -617,7 +617,7 @@ export default function TicketList() {
                         <td className="whitespace-nowrap px-6 py-4 text-center">
                           <StatusBadge status={ticket.status} />
                         </td>
-                        <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-550 dark:text-slate-400 font-medium">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-500 dark:text-slate-400 font-medium">
                           {ticket.assignee || (
                             <span className="italic text-slate-400 dark:text-slate-600">Unassigned</span>
                           )}

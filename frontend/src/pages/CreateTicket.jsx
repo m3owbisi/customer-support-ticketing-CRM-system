@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createTicket } from '../api';
 import { ArrowLeft, LifeBuoy, Send } from 'lucide-react';
@@ -198,7 +198,7 @@ export default function CreateTicket() {
                 name="priority"
                 value={formData.priority}
                 onChange={handleChange}
-                className="mt-1.5 block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-955 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500"
+                className="mt-1.5 block w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-indigo-500"
               >
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
