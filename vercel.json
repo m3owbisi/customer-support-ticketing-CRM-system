@@ -1,6 +1,6 @@
 {
   "cleanUrls": true,
-  "outputDirectory": "frontend/dist",
+  "outputDirectory": "frontend",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
