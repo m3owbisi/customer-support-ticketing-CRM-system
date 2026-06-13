@@ -226,7 +226,7 @@ router.put('/:ticket_id', (req, res) => {
       }
 
       if (fields.length > 0) {
-        fields.push("updated_at = datetime('now', 'localtime')");
+        fields.push("updated_at = CURRENT_TIMESTAMP");
         const updateStmt = db.prepare(`UPDATE tickets SET ${fields.join(', ')} WHERE ticket_id = ?`);
         updateStmt.run(...values, ticket_id);
       }

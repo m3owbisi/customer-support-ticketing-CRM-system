@@ -6,6 +6,12 @@ import PriorityBadge from '../components/PriorityBadge';
 import { ArrowLeft, User, Calendar, Mail, FileText, Send, MessageSquare, Clipboard, Edit2, Check, X, Tag } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const parseUTCDate = (dateStr) => {
+  if (!dateStr) return new Date();
+  if (dateStr.includes('T') && dateStr.includes('Z')) return new Date(dateStr);
+  return new Date(dateStr.replace(' ', 'T') + 'Z');
+};
+
 export default function TicketDetail() {
   const { ticket_id } = useParams();
   const navigate = useNavigate();
@@ -347,7 +353,7 @@ export default function TicketDetail() {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Created Date</p>
                   <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                    {new Date(ticket.created_at).toLocaleString()}
+                    {parseUTCDate(ticket.created_at).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -357,7 +363,7 @@ export default function TicketDetail() {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Last Updated</p>
                   <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                    {new Date(ticket.updated_at).toLocaleString()}
+                    {parseUTCDate(ticket.updated_at).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -520,7 +526,7 @@ export default function TicketDetail() {
                       {note.note_text}
                     </p>
                     <div className="mt-2 text-right text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                      {new Date(note.created_at).toLocaleString()}
+                      {parseUTCDate(note.created_at).toLocaleString()}
                     </div>
                   </div>
                 ))

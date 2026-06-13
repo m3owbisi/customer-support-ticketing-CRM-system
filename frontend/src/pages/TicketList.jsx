@@ -6,6 +6,12 @@ import PriorityBadge from '../components/PriorityBadge';
 import { Search, SlidersHorizontal, Download, ArrowRight, ClipboardList, AlertCircle, Clock, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const parseUTCDate = (dateStr) => {
+  if (!dateStr) return new Date();
+  if (dateStr.includes('T') && dateStr.includes('Z')) return new Date(dateStr);
+  return new Date(dateStr.replace(' ', 'T') + 'Z');
+};
+
 export default function TicketList() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -448,7 +454,7 @@ export default function TicketList() {
                   </div>
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
-                      {new Date(ticket.created_at).toLocaleDateString(undefined, {
+                      {parseUTCDate(ticket.created_at).toLocaleDateString(undefined, {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric'
@@ -623,7 +629,7 @@ export default function TicketList() {
                           )}
                         </td>
                         <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-400 dark:text-slate-500 font-medium">
-                          {new Date(ticket.created_at).toLocaleDateString(undefined, {
+                          {parseUTCDate(ticket.created_at).toLocaleDateString(undefined, {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric'
