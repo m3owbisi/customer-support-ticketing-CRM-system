@@ -10,7 +10,7 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * @route GET /api/tickets
  * @desc List all tickets with search, filtering, and pagination
  */
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const { status, search, priority, page = 1, limit = 10 } = req.query;
 
@@ -46,7 +46,8 @@ router.get('/', (req, res) => {
 
     // Get matching count
     const countStmt = db.prepare(`SELECT COUNT(*) as count FROM tickets ${whereClause}`);
-    const total = countStmt.get(...params).count;
+    const countResult = await countStmt.get(...params);
+    const total = countResult ? countResult.count : 0;
 
     // Fetch matching tickets
     const ticketsStmt = db.prepare(`
@@ -56,7 +57,7 @@ router.get('/', (req, res) => {
       ORDER BY created_at DESC
       LIMIT ? OFFSET ?
     `);
-    const tickets = ticketsStmt.all(...params, limitNum, offset);
+    const tickets = await ticketsStmt.all(...params, limitNum, offset);
 
     // Get overall counts summary for stats cards
     const summaryStmt = db.prepare(`
@@ -67,12 +68,12 @@ router.get('/', (req, res) => {
         SUM(CASE WHEN status = 'Closed' THEN 1 ELSE 0 END) as closed
       FROM tickets
     `);
-    const counts = summaryStmt.get();
+    const counts = await summaryStmt.get();
     const summary = {
-      total: counts.total || 0,
-      open: counts.open || 0,
-      in_progress: counts.in_progress || 0,
-      closed: counts.closed || 0
+      total: (counts && counts.total) || 0,
+      open: (counts && counts.open) || 0,
+      in_progress: (counts && counts.in_progress) || 0,
+      closed: (counts && counts.closed) || 0
     };
 
     res.json({
@@ -92,7 +93,7 @@ router.get('/', (req, res) => {
  * @route POST /api/tickets
  * @desc Create a new ticket
  */
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { customer_name, customer_email, subject, description, priority = 'Medium', assignee, tags } = req.body;
 
@@ -122,13 +123,13 @@ router.post('/', (req, res) => {
       return res.status(400).json({ error: 'Validation Error', message: 'Priority must be Low, Medium, or High' });
     }
 
-    const transaction = db.transaction(() => {
-      const ticket_id = generateNextTicketId(db);
+    const transaction = await db.transaction(async () => {
+      const ticket_id = await generateNextTicketId(db);
       const insertStmt = db.prepare(`
         INSERT INTO tickets (ticket_id, customer_name, customer_email, subject, description, status, priority, assignee, tags)
         VALUES (?, ?, ?, ?, ?, 'Open', ?, ?, ?)
       `);
-      insertStmt.run(
+      await insertStmt.run(
         ticket_id,
         customer_name.trim(),
         customer_email.trim().toLowerCase(),
@@ -139,11 +140,11 @@ router.post('/', (req, res) => {
         tags && tags.trim() ? tags.trim().toLowerCase() : null
       );
       
-      const details = db.prepare('SELECT created_at FROM tickets WHERE ticket_id = ?').get(ticket_id);
+      const details = await db.prepare('SELECT created_at FROM tickets WHERE ticket_id = ?').get(ticket_id);
       return { ticket_id, created_at: details.created_at };
     });
 
-    const result = transaction();
+    const result = await transaction();
     res.status(201).json(result);
   } catch (error) {
     console.error('Error creating ticket:', error);
@@ -155,16 +156,16 @@ router.post('/', (req, res) => {
  * @route GET /api/tickets/:ticket_id
  * @desc Get details of a single ticket with notes
  */
-router.get('/:ticket_id', (req, res) => {
+router.get('/:ticket_id', async (req, res) => {
   try {
     const { ticket_id } = req.params;
     
-    const ticket = db.prepare('SELECT * FROM tickets WHERE ticket_id = ?').get(ticket_id);
+    const ticket = await db.prepare('SELECT * FROM tickets WHERE ticket_id = ?').get(ticket_id);
     if (!ticket) {
       return res.status(404).json({ error: 'Not Found', message: `Ticket ${ticket_id} not found` });
     }
 
-    const notes = db.prepare('SELECT note_text, created_at FROM notes WHERE ticket_id = ? ORDER BY created_at ASC').all(ticket_id);
+    const notes = await db.prepare('SELECT note_text, created_at FROM notes WHERE ticket_id = ? ORDER BY created_at ASC').all(ticket_id);
 
     res.json({
       ...ticket,
@@ -180,19 +181,19 @@ router.get('/:ticket_id', (req, res) => {
  * @route PUT /api/tickets/:ticket_id
  * @desc Update status, priority, assignee, and/or add notes
  */
-router.put('/:ticket_id', (req, res) => {
+router.put('/:ticket_id', async (req, res) => {
   try {
     const { ticket_id } = req.params;
     const { status, priority, assignee, note_text, tags } = req.body;
 
-    const transaction = db.transaction(() => {
-      const ticket = db.prepare('SELECT 1 FROM tickets WHERE ticket_id = ?').get(ticket_id);
+    const transaction = await db.transaction(async () => {
+      const ticket = await db.prepare('SELECT 1 FROM tickets WHERE ticket_id = ?').get(ticket_id);
       if (!ticket) return null;
 
       // Append note if provided
       if (note_text && note_text.trim() !== '') {
         const insertNote = db.prepare('INSERT INTO notes (ticket_id, note_text) VALUES (?, ?)');
-        insertNote.run(ticket_id, note_text.trim());
+        await insertNote.run(ticket_id, note_text.trim());
       }
 
       // Fields to update
@@ -226,16 +227,20 @@ router.put('/:ticket_id', (req, res) => {
       }
 
       if (fields.length > 0) {
-        fields.push("updated_at = CURRENT_TIMESTAMP");
+        if (db.isPostgres) {
+          fields.push("updated_at = CURRENT_TIMESTAMP");
+        } else {
+          fields.push("updated_at = CURRENT_TIMESTAMP");
+        }
         const updateStmt = db.prepare(`UPDATE tickets SET ${fields.join(', ')} WHERE ticket_id = ?`);
-        updateStmt.run(...values, ticket_id);
+        await updateStmt.run(...values, ticket_id);
       }
 
-      const updateInfo = db.prepare('SELECT updated_at FROM tickets WHERE ticket_id = ?').get(ticket_id);
+      const updateInfo = await db.prepare('SELECT updated_at FROM tickets WHERE ticket_id = ?').get(ticket_id);
       return { success: true, updated_at: updateInfo.updated_at };
     });
 
-    const result = transaction();
+    const result = await transaction();
     if (!result) {
       return res.status(404).json({ error: 'Not Found', message: `Ticket ${ticket_id} not found` });
     }

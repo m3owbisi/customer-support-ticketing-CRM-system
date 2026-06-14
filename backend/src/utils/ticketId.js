@@ -4,9 +4,9 @@
  * @param {import('better-sqlite3').Database} db 
  * @returns {string}
  */
-function generateNextTicketId(db) {
+async function generateNextTicketId(db) {
   const stmt = db.prepare("SELECT MAX(CAST(SUBSTR(ticket_id, 5) AS INTEGER)) as maxId FROM tickets");
-  const result = stmt.get();
+  const result = await stmt.get();
   const nextNumber = (result && result.maxId ? result.maxId : 0) + 1;
   return `TKT-${String(nextNumber).padStart(3, '0')}`;
 }
