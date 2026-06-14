@@ -5,9 +5,10 @@
  * @returns {string}
  */
 async function generateNextTicketId(db) {
-  const stmt = db.prepare("SELECT MAX(CAST(SUBSTR(ticket_id, 5) AS INTEGER)) as maxId FROM tickets");
+  const stmt = db.prepare('SELECT MAX(CAST(SUBSTR(ticket_id, 5) AS INTEGER)) as "maxId" FROM tickets');
   const result = await stmt.get();
-  const nextNumber = (result && result.maxId ? result.maxId : 0) + 1;
+  const maxVal = result ? (result.maxId || result.maxid || 0) : 0;
+  const nextNumber = Number(maxVal) + 1;
   return `TKT-${String(nextNumber).padStart(3, '0')}`;
 }
 

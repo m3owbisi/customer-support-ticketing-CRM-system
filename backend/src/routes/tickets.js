@@ -47,7 +47,7 @@ router.get('/', async (req, res) => {
     // Get matching count
     const countStmt = db.prepare(`SELECT COUNT(*) as count FROM tickets ${whereClause}`);
     const countResult = await countStmt.get(...params);
-    const total = countResult ? countResult.count : 0;
+    const total = countResult ? Number(countResult.count) : 0;
 
     // Fetch matching tickets
     const ticketsStmt = db.prepare(`
@@ -70,10 +70,10 @@ router.get('/', async (req, res) => {
     `);
     const counts = await summaryStmt.get();
     const summary = {
-      total: (counts && counts.total) || 0,
-      open: (counts && counts.open) || 0,
-      in_progress: (counts && counts.in_progress) || 0,
-      closed: (counts && counts.closed) || 0
+      total: (counts && Number(counts.total)) || 0,
+      open: (counts && Number(counts.open)) || 0,
+      in_progress: (counts && Number(counts.in_progress)) || 0,
+      closed: (counts && Number(counts.closed)) || 0
     };
 
     res.json({

@@ -178,7 +178,7 @@ async function initDb() {
 
   // Seed initial data if tables are empty
   const rowCount = await db.prepare('SELECT COUNT(*) as count FROM tickets').get();
-  if (rowCount && rowCount.count === 0) {
+  if (rowCount && Number(rowCount.count) === 0) {
     const insertTicket = db.prepare(`
       INSERT INTO tickets (ticket_id, customer_name, customer_email, subject, description, status, priority, assignee)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
